@@ -21,69 +21,74 @@ try:
     SCIPY_SKIMAGE_AVAILABLE = True
 except ImportError:
     SCIPY_SKIMAGE_AVAILABLE = False
-    st.warning("SciPy or scikit-image not installed. Some advanced features may be limited.")
+
+# Only initialize streamlit when running as main script
+if __name__ == "__main__":
+    st.set_page_config(page_title="AI-Powered Structural Health Monitor", layout="wide")
+
+    # Initialize session state
+    if 'analysis_results' not in st.session_state:
+        st.session_state.analysis_results = None
+    if 'video_frame_results' not in st.session_state:
+        st.session_state.video_frame_results = {}
+    if 'image_name' not in st.session_state:
+        st.session_state.image_name = None
+    if 'image_np' not in st.session_state:
+        st.session_state.image_np = None
+    if 'analysis_completed' not in st.session_state:
+        st.session_state.analysis_completed = False
+    if 'pdf_buffer' not in st.session_state:
+        st.session_state.pdf_buffer = None
+    if 'video_pdf_buffers' not in st.session_state:
+        st.session_state.video_pdf_buffers = {}
+
 from pdf_report import save_image_to_temp, generate_pdf_report
 
-# Set page config as the FIRST Streamlit command
-st.set_page_config(page_title="AI-Powered Structural Health Monitor", layout="wide")
+# Model loading - only when running as main script
+if __name__ == "__main__":
+    @st.cache_resource
+    def load_models():
+        models_status = {}
+        try:
+            yolo_path = "runs/detect/train3/weights/best.pt"
+            if os.path.exists(yolo_path):
+                yolo_model = YOLO(yolo_path)
+                models_status['yolo'] = f"Custom model loaded from {yolo_path}"
+            else:
+                yolo_model = YOLO("yolov8n.pt")
+                models_status['yolo'] = "Using default YOLOv8n model"
 
-# Initialize session state
-if 'analysis_results' not in st.session_state:
-    st.session_state.analysis_results = None
-if 'video_frame_results' not in st.session_state:
-    st.session_state.video_frame_results = {}
-if 'image_name' not in st.session_state:
-    st.session_state.image_name = None
-if 'image_np' not in st.session_state:
-    st.session_state.image_np = None
-if 'analysis_completed' not in st.session_state:
-    st.session_state.analysis_completed = False
-if 'pdf_buffer' not in st.session_state:
-    st.session_state.pdf_buffer = None
-if 'video_pdf_buffers' not in st.session_state:
-    st.session_state.video_pdf_buffers = {}
+            seg_path = "./segmentation_model/weights/best.pt"
+            if os.path.exists(seg_path):
+                segmentation_model = YOLO(seg_path)
+                models_status['segmentation'] = f"Custom segmentation model loaded from {seg_path}"
+            else:
+                segmentation_model = YOLO("yolov8n-seg.pt")
+                models_status['segmentation'] = "Using default YOLOv8n-seg model"
 
-# Model loading
-@st.cache_resource
-def load_models():
-    models_status = {}
-    try:
-        yolo_path = "runs/detect/train3/weights/best.pt"
-        if os.path.exists(yolo_path):
-            yolo_model = YOLO(yolo_path)
-            models_status['yolo'] = f"Custom model loaded from {yolo_path}"
-        else:
-            yolo_model = YOLO("yolov8n.pt")
-            models_status['yolo'] = "Using default YOLOv8n model"
+            material_model = models.mobilenet_v2(weights='IMAGENET1K_V1')
+            material_model.classifier = nn.Sequential(
+                nn.Dropout(0.2),
+                nn.Linear(material_model.last_channel, 8)
+            )
+            material_model.eval()
+            models_status['material'] = "MobileNetV2 model loaded with custom classifier for 8 material types"
 
-        seg_path = "./segmentation_model/weights/best.pt"
-        if os.path.exists(seg_path):
-            segmentation_model = YOLO(seg_path)
-            models_status['segmentation'] = f"Custom segmentation model loaded from {seg_path}"
-        else:
-            segmentation_model = YOLO("yolov8n-seg.pt")
-            models_status['segmentation'] = "Using default YOLOv8n-seg model"
+            st.success("✅ All models loaded successfully!")
+            with st.expander("Model Loading Details"):
+                for model_type, status in models_status.items():
+                    st.info(f"{model_type.capitalize()}: {status}")
 
-        material_model = models.mobilenet_v2(weights='IMAGENET1K_V1')
-        material_model.classifier = nn.Sequential(
-            nn.Dropout(0.2),
-            nn.Linear(material_model.last_channel, 8)
-        )
-        material_model.eval()
-        models_status['material'] = "MobileNetV2 model loaded with custom classifier for 8 material types"
+            return yolo_model, segmentation_model, material_model
+        except Exception as e:
+            st.error(f"❌ Model loading failed: {str(e)}")
+            st.warning("⚠ Some features may not work properly without models.")
+            return None, None, None
 
-        st.success("✅ All models loaded successfully!")
-        with st.expander("Model Loading Details"):
-            for model_type, status in models_status.items():
-                st.info(f"{model_type.capitalize()}: {status}")
-
-        return yolo_model, segmentation_model, material_model
-    except Exception as e:
-        st.error(f"❌ Model loading failed: {str(e)}")
-        st.warning("⚠ Some features may not work properly without models.")
-        return None, None, None
-
-yolo_model, segmentation_model, material_model = load_models()
+    yolo_model, segmentation_model, material_model = load_models()
+else:
+    # When imported as module, load models without streamlit decorators
+    yolo_model, segmentation_model, material_model = None, None, None
 
 # Image processing functions
 def load_and_preprocess_image(uploaded_file):
@@ -94,7 +99,8 @@ def load_and_preprocess_image(uploaded_file):
             raise ValueError("Invalid image file: The uploaded image appears to be empty.")
         return cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
     except Exception as e:
-        st.error(f"❌ Error loading or preprocessing the image: {str(e)}")
+        if __name__ == "__main__":
+            st.error(f"❌ Error loading or preprocessing the image: {str(e)}")
         return None
 
 def calculate_severity(width_cm, length_cm, label):
@@ -112,13 +118,17 @@ def calculate_severity(width_cm, length_cm, label):
         else:
             return 'Critical'
     except Exception as e:
-        st.error(f"❌ Severity calculation error: {str(e)}")
+        if __name__ == "__main__":
+            st.error(f"❌ Severity calculation error: {str(e)}")
         return 'Unknown'
 
-def detect_with_yolo(image_np, px_to_cm_ratio=0.1):
+def detect_with_yolo(image_np, px_to_cm_ratio=0.1, model=None):
     try:
-        if yolo_model is None:
-            st.warning("⚠ YOLO model is not loaded. Using placeholder detection.")
+        if model is None:
+            model = yolo_model
+        if model is None:
+            if __name__ == "__main__":
+                st.warning("⚠ YOLO model is not loaded. Using placeholder detection.")
             height, width = image_np.shape[:2]
             placeholder_detection = {
                 'width_cm': 2.5,
@@ -136,7 +146,7 @@ def detect_with_yolo(image_np, px_to_cm_ratio=0.1):
             return annotated_image, [placeholder_detection]
 
         image_rgb = cv2.cvtColor(image_np, cv2.COLOR_BGR2RGB)
-        results = yolo_model.predict(image_rgb, conf=0.3)
+        results = model.predict(image_rgb, conf=0.3)
         crack_details = []
         annotated_image = image_np.copy()
 
@@ -150,7 +160,7 @@ def detect_with_yolo(image_np, px_to_cm_ratio=0.1):
                     length_cm = length_px * px_to_cm_ratio
 
                     class_id = int(box.cls[0].cpu().numpy())
-                    label = yolo_model.names.get(class_id, "unknown")
+                    label = model.names.get(class_id, "unknown")
                     confidence = float(box.conf[0].cpu().numpy())
                     severity = calculate_severity(width_cm, length_cm, label)
 
@@ -178,11 +188,12 @@ def detect_with_yolo(image_np, px_to_cm_ratio=0.1):
                     cv2.putText(annotated_image, display_text, (x1, y1 - 10),
                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
 
-        if not crack_details:
+        if not crack_details and __name__ == "__main__":
             st.info("ℹ No objects detected by YOLO.")
         return annotated_image, crack_details
     except Exception as e:
-        st.error(f"❌ YOLO detection failed: {str(e)}")
+        if __name__ == "__main__":
+            st.error(f"❌ YOLO detection failed: {str(e)}")
         return image_np, []
 
 def detect_biological_growth_advanced(image_np):
@@ -290,10 +301,13 @@ def calculate_biological_growth_area(crack_details, seg_results, image_np, px_to
         print(f"[ERROR] Biological growth area calculation failed: {e}")
         return 0
 
-def segment_image(image_np):
+def segment_image(image_np, model=None):
     try:
-        if segmentation_model is None:
-            st.warning("⚠ Segmentation model is not loaded. Creating placeholder segmentation.")
+        if model is None:
+            model = segmentation_model
+        if model is None:
+            if __name__ == "__main__":
+                st.warning("⚠ Segmentation model is not loaded. Creating placeholder segmentation.")
             gray = cv2.cvtColor(image_np, cv2.COLOR_BGR2GRAY)
             edges = cv2.Canny(gray, 100, 200)
             segmented_image = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
@@ -301,7 +315,7 @@ def segment_image(image_np):
                        (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2)
             return segmented_image, None
         image_rgb = cv2.cvtColor(image_np, cv2.COLOR_BGR2RGB)
-        results = segmentation_model.predict(source=image_rgb, conf=0.3, save=False)
+        results = model.predict(source=image_rgb, conf=0.3, save=False)
         if results and len(results) > 0 and results[0] is not None:
             try:
                 segmented_image = results[0].plot()
@@ -318,10 +332,12 @@ def segment_image(image_np):
                 print(f"⚠️ Plot method failed: {plot_error}, using fallback")
                 return image_np.copy(), results
         else:
-            st.info("ℹ No segments detected in the image.")
+            if __name__ == "__main__":
+                st.info("ℹ No segments detected in the image.")
             return image_np.copy(), None
     except Exception as e:
-        st.error(f"❌ Segmentation failed: {str(e)}")
+        if __name__ == "__main__":
+            st.error(f"❌ Segmentation failed: {str(e)}")
         return image_np.copy(), None
 
 def preprocess_image_for_depth_estimation(image_np):
@@ -330,7 +346,8 @@ def preprocess_image_for_depth_estimation(image_np):
         blurred_image = cv2.GaussianBlur(gray_image, (5, 5), 0)
         return cv2.equalizeHist(blurred_image)
     except Exception as e:
-        st.error(f"❌ Depth preprocessing failed: {str(e)}")
+        if __name__ == "__main__":
+            st.error(f"❌ Depth preprocessing failed: {str(e)}")
         return cv2.cvtColor(image_np, cv2.COLOR_BGR2GRAY)
 
 def create_depth_estimation_heatmap(equalized_image):
@@ -341,7 +358,8 @@ def create_depth_estimation_heatmap(equalized_image):
         depth_estimation_normalized = cv2.normalize(depth_estimation, None, 0, 255, cv2.NORM_MINMAX)
         return cv2.applyColorMap(depth_estimation_normalized.astype(np.uint8), cv2.COLORMAP_JET)
     except Exception as e:
-        st.error(f"❌ Depth heatmap creation failed: {str(e)}")
+        if __name__ == "__main__":
+            st.error(f"❌ Depth heatmap creation failed: {str(e)}")
         return cv2.cvtColor(equalized_image, cv2.COLOR_GRAY2BGR)
 
 def apply_canny_edge_detection(image_np):
@@ -350,16 +368,20 @@ def apply_canny_edge_detection(image_np):
         edges = cv2.Canny(gray, 100, 200)
         return cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
     except Exception as e:
-        st.error(f"❌ Edge detection failed: {str(e)}")
+        if __name__ == "__main__":
+            st.error(f"❌ Edge detection failed: {str(e)}")
         return image_np
 
 # Define material classes globally
 material_classes = ['Stone', 'Brick', 'Plaster', 'Concrete', 'Wood', 'Metal', 'Marble', 'Sandstone']
 
-def classify_material(image_np):
+def classify_material(image_np, model=None):
     try:
-        if material_model is None:
-            st.warning("⚠ Material classification model not loaded. Using texture-based fallback.")
+        if model is None:
+            model = material_model
+        if model is None:
+            if __name__ == "__main__":
+                st.warning("⚠ Material classification model not loaded. Using texture-based fallback.")
             return classify_material_fallback(image_np)
 
         transform = transforms.Compose([
@@ -373,7 +395,7 @@ def classify_material(image_np):
         image_tensor = transform(image_rgb).unsqueeze(0)
 
         with torch.no_grad():
-            output = material_model(image_tensor)
+            output = model(image_tensor)
             probabilities = torch.softmax(output, dim=1)[0].cpu().numpy()
 
         predicted_index = np.argmax(probabilities)
@@ -384,7 +406,8 @@ def classify_material(image_np):
 
         return predicted_material, probabilities
     except Exception as e:
-        st.error(f"❌ Model-based classification failed: {e}")
+        if __name__ == "__main__":
+            st.error(f"❌ Model-based classification failed: {e}")
         return classify_material_fallback(image_np)
 
 def classify_material_fallback(image_np):
@@ -400,14 +423,15 @@ def classify_material_fallback(image_np):
 
         mean_b, mean_g, mean_r = np.mean(image_np, axis=(0, 1))
 
-        st.write({
-            "Mean Hue": mean_hue,
-            "Saturation": mean_sat,
-            "Value": mean_val,
-            "Value STD": std_val,
-            "Texture": texture,
-            "R": mean_r, "G": mean_g, "B": mean_b
-        })
+        if __name__ == "__main__":
+            st.write({
+                "Mean Hue": mean_hue,
+                "Saturation": mean_sat,
+                "Value": mean_val,
+                "Value STD": std_val,
+                "Texture": texture,
+                "R": mean_r, "G": mean_g, "B": mean_b
+            })
 
         if mean_r > mean_g > mean_b and mean_sat > 80:
             return 'Brick', np.array([0.1, 0.7, 0.05, 0.05, 0.05, 0.02, 0.02, 0.01])
@@ -434,7 +458,8 @@ def classify_material_fallback(image_np):
         else:
             return 'Stone', np.array([0.5, 0.1, 0.1, 0.1, 0.05, 0.05, 0.05, 0.05])
     except Exception as e:
-        st.error(f"❌ Fallback classification failed: {e}")
+        if __name__ == "__main__":
+            st.error(f"❌ Fallback classification failed: {e}")
         return 'Unknown', np.array([0.125] * 8)
 
 def visualize_material_classification(material, probabilities):
@@ -460,7 +485,8 @@ def visualize_material_classification(material, probabilities):
         )
         return fig
     except Exception as e:
-        st.error(f"❌ Visualization failed: {e}")
+        if __name__ == "__main__":
+            st.error(f"❌ Visualization failed: {e}")
         return None
 
 def plot_crack_severity(crack_details):
@@ -489,7 +515,8 @@ def plot_crack_severity(crack_details):
         )
         return fig
     except Exception as e:
-        st.error(f"❌ Crack severity visualization failed: {str(e)}")
+        if __name__ == "__main__":
+            st.error(f"❌ Crack severity visualization failed: {str(e)}")
         return None
 
 def plot_biological_growth_area(growth_area_cm2, total_image_area_cm2):
@@ -514,7 +541,8 @@ def plot_biological_growth_area(growth_area_cm2, total_image_area_cm2):
         )
         return fig
     except Exception as e:
-        st.error(f"❌ Biological growth area visualization failed: {str(e)}")
+        if __name__ == "__main__":
+            st.error(f"❌ Biological growth area visualization failed: {str(e)}")
         return None
 
 def plot_environmental_footprints(carbon_footprint, water_footprint):
@@ -537,7 +565,8 @@ def plot_environmental_footprints(carbon_footprint, water_footprint):
         )
         return fig
     except Exception as e:
-        st.error(f"❌ Environmental footprints visualization failed: {str(e)}")
+        if __name__ == "__main__":
+            st.error(f"❌ Environmental footprints visualization failed: {str(e)}")
         return None
 
 def estimate_material_quantity(crack_details, growth_area_cm2, material):
@@ -561,7 +590,8 @@ def estimate_material_quantity(crack_details, growth_area_cm2, material):
         total_mass_kg = total_volume_cm3 * density
         return max(total_mass_kg, 0.1)
     except Exception as e:
-        st.error(f"❌ Material quantity estimation failed: {str(e)}")
+        if __name__ == "__main__":
+            st.error(f"❌ Material quantity estimation failed: {str(e)}")
         return 0.1
 
 def predict_crack_progression(crack_details):
@@ -591,7 +621,8 @@ def predict_crack_progression(crack_details):
             predictions.append(prediction_text)
         return "\n\n".join(predictions)
     except Exception as e:
-        st.error(f"❌ Crack progression prediction failed: {str(e)}")
+        if __name__ == "__main__":
+            st.error(f"❌ Crack progression prediction failed: {str(e)}")
         return "Unable to predict crack progression."
 
 def calculate_carbon_footprint(material: str, quantity_kg: float) -> float:

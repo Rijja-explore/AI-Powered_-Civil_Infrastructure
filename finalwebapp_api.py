@@ -115,20 +115,70 @@ app = Flask(__name__)
 CORS(app)
 app.json.sort_keys = False
 
-# Import all functions from finalwebapp.py
-import sys
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+# Import functions from finalwebapp (suppress streamlit warnings when importing as module)
+import warnings
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=UserWarning, module="streamlit")
+    try:
+        from finalwebapp import (
+            detect_with_yolo, detect_biological_growth, detect_biological_growth_advanced,
+            segment_image, preprocess_image_for_depth_estimation, create_depth_estimation_heatmap,
+            apply_canny_edge_detection, classify_material, classify_material_fallback,
+            calculate_biological_growth_area, convert_numpy_types, image_to_base64
+        )
+    except Exception as e:
+        print(f"❌ Failed to import functions from finalwebapp: {e}")
+        raise
 
-# Import functions from finalwebapp
-from finalwebapp import (
-    load_models, detect_with_yolo, detect_biological_growth, detect_biological_growth_advanced,
-    segment_image, preprocess_image_for_depth_estimation, create_depth_estimation_heatmap,
-    apply_canny_edge_detection, classify_material, classify_material_fallback,
-    calculate_biological_growth_area, convert_numpy_types, image_to_base64
-)
+# Load models directly (not through load_models function since it's now conditional)
+try:
+    from ultralytics import YOLO
+    import torch
+    import torch.nn as nn
+    import torchvision.models as models
+    import torchvision.transforms as transforms
+    
+    # Load YOLO model
+    yolo_path = "runs/detect/train3/weights/best.pt"
+    if os.path.exists(yolo_path):
+        YOLO_MODEL = YOLO(yolo_path)
+        yolo_status = f"Custom model loaded from {yolo_path}"
+    else:
+        YOLO_MODEL = YOLO("yolov8n.pt")
+        yolo_status = "Using default YOLOv8n model"
 
-# Load models globally
-YOLO_MODEL, MATERIAL_MODEL, MODELS_STATUS = load_models()
+    # Load segmentation model
+    seg_path = "./segmentation_model/weights/best.pt"
+    if os.path.exists(seg_path):
+        SEGMENTATION_MODEL = YOLO(seg_path)
+        seg_status = f"Custom segmentation model loaded from {seg_path}"
+    else:
+        SEGMENTATION_MODEL = YOLO("yolov8n-seg.pt")
+        seg_status = "Using default YOLOv8n-seg model"
+
+    # Load material model
+    MATERIAL_MODEL = models.mobilenet_v2(weights='IMAGENET1K_V1')
+    MATERIAL_MODEL.classifier = nn.Sequential(
+        nn.Dropout(0.2),
+        nn.Linear(MATERIAL_MODEL.last_channel, 8)
+    )
+    MATERIAL_MODEL.eval()
+    material_status = "MobileNetV2 model loaded with custom classifier for 8 material types"
+
+    MODELS_STATUS = {
+        'yolo': yolo_status,
+        'segmentation': seg_status,
+        'material': material_status
+    }
+    
+    print("✅ Models loaded successfully for API")
+    
+except Exception as e:
+    print(f"❌ Model loading failed: {e}")
+    YOLO_MODEL = None
+    SEGMENTATION_MODEL = None
+    MATERIAL_MODEL = None
+    MODELS_STATUS = {'error': str(e)}
 
 def create_environmental_impact_graphs(carbon_footprint, water_footprint, material_quantity, energy_consumption):
     """Create comprehensive environmental impact visualizations with proper labeling"""
@@ -510,6 +560,180 @@ def create_data_science_inference_graphs(analysis_results):
         traceback.print_exc()
         return ""
 
+def analyze_image_comprehensive(image_np, px_to_cm_ratio=0.1, confidence_threshold=0.3):
+    """Perform comprehensive image analysis similar to the main analyze endpoint"""
+    try:
+        print("🔍 Starting comprehensive image analysis...")
+
+        # Perform all analyses using finalwebapp.py functions
+
+        # 1. YOLO Crack Detection
+        annotated_image, crack_details = detect_with_yolo(image_np, px_to_cm_ratio, YOLO_MODEL)
+
+        # 2. Biological Growth Detection
+        growth_analysis, growth_image = detect_biological_growth(image_np, crack_details)
+
+        # 3. Image Segmentation
+        segmented_image = segment_image(image_np, SEGMENTATION_MODEL)
+        if segmented_image is None or not isinstance(segmented_image, np.ndarray):
+            segmented_image = image_np.copy()  # Fallback to original image
+
+        # 4. Depth Estimation
+        preprocessed = preprocess_image_for_depth_estimation(image_np)
+        depth_heatmap = create_depth_estimation_heatmap(preprocessed)
+
+        # 5. Edge Detection
+        edges = apply_canny_edge_detection(image_np)
+
+        # 6. Material Classification
+        material, probabilities = classify_material(image_np, MATERIAL_MODEL)
+        material_analysis = {
+            'predicted_material': material,
+            'probabilities': probabilities
+        }
+
+        # Calculate statistics
+        total_cracks = len(crack_details)
+        severity_counts = {}
+        total_crack_area = 0
+
+        for crack in crack_details:
+            severity = crack['severity']
+            severity_counts[severity] = severity_counts.get(severity, 0) + 1
+            area_cm2 = crack['width_cm'] * crack['length_cm']
+            total_crack_area += area_cm2
+
+        # Enhanced Environmental impact calculations
+        carbon_footprint = total_cracks * 2.5 + np.random.random() * 10
+        water_footprint = growth_analysis['growth_percentage'] * 15 + np.random.random() * 50
+
+        # Calculate comprehensive environmental metrics
+        material_quantity = np.random.uniform(50, 500)  # kg of material
+        energy_consumption = carbon_footprint * 1.2  # kWh
+        waste_generation = total_crack_area * 0.1  # kg
+        biodiversity_impact = min(growth_analysis['growth_percentage'] / 10, 5.0)  # 0-5 scale
+        air_quality_impact = carbon_footprint * 0.3  # PM2.5 equivalent
+
+        # 7. Advanced Data Science Analysis
+        if ADVANCED_ANALYTICS_AVAILABLE:
+            print("🧮 Running advanced data science analysis...")
+
+            # Prepare environmental data for analytics
+            environmental_data = {
+                'crack_count': len(crack_details) if crack_details else 0,
+                'total_crack_area': sum([crack.get('area_cm2', 0) for crack in crack_details]) if crack_details else 0,
+                'material_type': material_analysis.get('predicted_material', 'Unknown') if material_analysis else 'Unknown',
+                'confidence_score': max(material_analysis.get('probabilities', {}).values()) if material_analysis and material_analysis.get('probabilities') else 0
+            }
+
+            # Run comprehensive analytics
+            advanced_analytics_results = create_comprehensive_analytics_report(
+                crack_details, material_analysis, environmental_data
+            )
+        else:
+            advanced_analytics_results = {'error': 'Advanced Analytics Module not available'}
+
+        # Environmental assessment categories
+        sustainability_score = max(0, 10 - (carbon_footprint/5) - (water_footprint/100))
+        eco_efficiency = min(10, material_quantity / carbon_footprint) if carbon_footprint > 0 else 10
+
+        # Create comprehensive environmental impact graphs
+        environmental_charts = create_environmental_impact_graphs(
+            carbon_footprint, water_footprint, material_quantity, energy_consumption
+        )
+
+        # Create data science inference graphs
+        data_science_chart = create_data_science_inference_graphs({
+            'crack_detection': {'details': crack_details},
+            'material_analysis': material_analysis,
+            'biological_growth': growth_analysis
+        })
+
+        # Prepare comprehensive response
+        results = convert_numpy_types({
+            "crack_detection": {
+                "count": total_cracks,
+                "details": crack_details,
+                "statistics": {
+                    "total_cracks": total_cracks,
+                    "total_area_cm2": round(total_crack_area, 2),
+                    "average_size_cm2": round(total_crack_area / max(total_cracks, 1), 2),
+                    "severity_distribution": severity_counts
+                }
+            },
+            "biological_growth": growth_analysis,
+            "material_analysis": material_analysis,
+            "environmental_impact_assessment": {
+                "carbon_footprint_kg": round(carbon_footprint, 2),
+                "water_footprint_liters": round(water_footprint, 2),
+                "material_quantity_kg": round(material_quantity, 2),
+                "energy_consumption_kwh": round(energy_consumption, 2),
+                "waste_generation_kg": round(waste_generation, 2),
+                "biodiversity_impact_score": round(biodiversity_impact, 2),
+                "air_quality_impact_pm25": round(air_quality_impact, 2),
+                "sustainability_score": round(sustainability_score, 2),
+                "eco_efficiency_rating": round(eco_efficiency, 2),
+                "impact_level": "Low" if carbon_footprint < 15 else "Medium" if carbon_footprint < 30 else "High",
+                "environmental_charts": environmental_charts,
+                "recommendations": [
+                    "Use eco-friendly materials for repairs" if carbon_footprint > 20 else "Continue current practices",
+                    "Implement water recycling systems" if water_footprint > 100 else "Water usage is acceptable",
+                    "Consider solar-powered monitoring equipment" if energy_consumption > 15 else "Energy usage is efficient",
+                    "Plan bio-growth removal with natural methods" if biodiversity_impact > 3 else "Maintain biodiversity balance"
+                ]
+            },
+            "data_science_insights": {
+                "statistical_summary": {
+                    "crack_density": round(total_cracks / max(image_np.shape[0] * image_np.shape[1] / 10000, 1), 4),
+                    "deterioration_index": round((total_cracks * 0.4 + growth_analysis['growth_percentage'] * 0.6), 2),
+                    "structural_health_score": round(max(0, 100 - total_cracks * 5 - growth_analysis['growth_percentage']), 1),
+                    "maintenance_urgency": "High" if total_cracks > 5 else "Medium" if total_cracks > 2 else "Low"
+                },
+                "predictive_analytics": {
+                    "crack_progression_6_months": round(total_cracks * 1.15, 1),
+                    "growth_expansion_rate": round(growth_analysis['growth_percentage'] * 1.1, 2),
+                    "expected_maintenance_cost": round(total_cracks * 150 + growth_analysis['growth_percentage'] * 50, 2),
+                    "risk_assessment": "Critical" if total_cracks > 10 else "Moderate" if total_cracks > 3 else "Low"
+                },
+                "comprehensive_data_science": advanced_analytics_results,
+                "comprehensive_analysis_chart": data_science_chart
+            }
+        })
+
+        # Convert all images to base64
+        output_images = {
+            "original": image_to_base64(image_np),
+            "crack_detection": image_to_base64(annotated_image),
+            "biological_growth": image_to_base64(growth_image),
+            "segmentation": image_to_base64(segmented_image),
+            "depth_estimation": image_to_base64(depth_heatmap),
+            "edge_detection": image_to_base64(edges)
+        }
+
+        print("✅ Comprehensive image analysis completed successfully")
+
+        return {
+            "status": "success",
+            "message": "Comprehensive structural health monitoring analysis completed",
+            "analysis_type": "structural_health_comprehensive",
+            "results": results,
+            "output_images": output_images,
+            "analysis_summary": convert_numpy_types({
+                "total_cracks": total_cracks,
+                "biological_growth_coverage": f"{growth_analysis['growth_percentage']}%",
+                "primary_material": material_analysis['predicted_material'],
+                "environmental_impact": results['environmental_impact_assessment']['impact_level'],
+                "structural_health_score": results['data_science_insights']['statistical_summary']['structural_health_score'],
+                "sustainability_score": results['environmental_impact_assessment']['sustainability_score']
+            })
+        }
+
+    except Exception as e:
+        print(f"❌ Error in comprehensive analysis: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return {"error": f"Comprehensive analysis failed: {str(e)}"}
+
 @app.route('/', methods=['GET'])
 def home():
     """API information endpoint"""
@@ -570,13 +794,13 @@ def analyze():
         # Perform all analyses using finalwebapp.py functions
         
         # 1. YOLO Crack Detection
-        annotated_image, crack_details = detect_with_yolo(image_np, px_to_cm_ratio)
+        annotated_image, crack_details = detect_with_yolo(image_np, px_to_cm_ratio, YOLO_MODEL)
         
         # 2. Biological Growth Detection
         growth_analysis, growth_image = detect_biological_growth(image_np, crack_details)
         
         # 3. Image Segmentation
-        segmented_image = segment_image(image_np)
+        segmented_image = segment_image(image_np, SEGMENTATION_MODEL)
         if segmented_image is None or not isinstance(segmented_image, np.ndarray):
             segmented_image = image_np.copy()  # Fallback to original image
         
@@ -588,7 +812,7 @@ def analyze():
         edges = apply_canny_edge_detection(image_np)
         
         # 6. Material Classification
-        material, probabilities = classify_material(image_np)
+        material, probabilities = classify_material(image_np, MATERIAL_MODEL)
         material_analysis = {
             'predicted_material': material,
             'probabilities': probabilities
@@ -632,7 +856,7 @@ def analyze():
                 'crack_count': len(crack_details) if crack_details else 0,
                 'total_crack_area': sum([crack.get('area_cm2', 0) for crack in crack_details]) if crack_details else 0,
                 'material_type': material_analysis.get('predicted_material', 'Unknown') if material_analysis else 'Unknown',
-                'confidence_score': max(material_analysis.get('probabilities', {}).values()) if material_analysis and material_analysis.get('probabilities') else 0
+                'confidence_score': float(max(material_analysis.get('probabilities', [0]))) if material_analysis and material_analysis.get('probabilities') is not None and len(material_analysis.get('probabilities', [])) > 0 else 0.0
             }
             
             # Run comprehensive analytics based on academic syllabus
@@ -728,7 +952,7 @@ def analyze():
                 "inference_results": {
                     "confidence_intervals": {
                         "crack_detection_accuracy": "95.2% ± 2.1%",
-                        "material_classification_precision": f"{float(max(material_analysis['probabilities'].values() if isinstance(material_analysis['probabilities'], dict) else material_analysis['probabilities'])) * 100:.1f}% ± 3.5%",
+                        "material_classification_precision": f"{float(max(material_analysis['probabilities']) if isinstance(material_analysis['probabilities'], (list, tuple)) or hasattr(material_analysis['probabilities'], '__iter__') else material_analysis['probabilities']) * 100:.1f}% ± 3.5%",
                         "growth_measurement_error": "±5.2%"
                     },
                     "statistical_significance": {
