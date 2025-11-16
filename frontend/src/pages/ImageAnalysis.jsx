@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Bar } from '@ant-design/plots';
 import { useAnalysis } from '../contexts/AnalysisContext';
 import { Camera, Upload, Play, Loader, PieChart, Target, Activity, TrendingUp, CheckCircle, AlertTriangle, BarChart3, Wind, Droplet, Zap, Leaf, Download } from 'lucide-react';
@@ -12,7 +12,7 @@ const ImageAnalysis = () => {
   const [error, setError] = useState(null);
   const [outputImages, setOutputImages] = useState(null);
   const fileInputRef = useRef(null);
-  const { updateAnalysis, clearAnalysis } = useAnalysis();
+  const { updateAnalysis, clearAnalysis, lastAnalysis, outputImages: contextOutputImages } = useAnalysis();
   
   const [settings, setSettings] = useState({
     confidenceThreshold: 0.3,
@@ -21,12 +21,31 @@ const ImageAnalysis = () => {
 
   const API_URL = 'http://localhost:5002';
 
+  // Load saved image and results on component mount and when context changes
+  useEffect(() => {
+    const savedImage = sessionStorage.getItem('lastUploadedImage');
+    if (savedImage) {
+      setPreview(savedImage);
+    }
+    // Load saved analysis results from context
+    if (lastAnalysis) {
+      setResults(lastAnalysis);
+    }
+    if (contextOutputImages) {
+      setOutputImages(contextOutputImages);
+    }
+  }, [lastAnalysis, contextOutputImages]);
+
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
     if (selectedFile) {
       setFile(selectedFile);
       const reader = new FileReader();
-      reader.onloadend = () => setPreview(reader.result);
+      reader.onloadend = () => {
+        setPreview(reader.result);
+        // Save image to sessionStorage for persistence across tabs
+        sessionStorage.setItem('lastUploadedImage', reader.result);
+      };
       reader.readAsDataURL(selectedFile);
       setResults(null);
       setOutputImages(null);
@@ -79,7 +98,7 @@ const ImageAnalysis = () => {
       const data = await response.json();
       setResults(data.results);
       setOutputImages(data.output_images);
-      updateAnalysis(data.results); // Store in context for persistence
+      updateAnalysis(data.results, data.output_images); // Store BOTH results and images in context for persistence
       setProgress(100);
       setLoading(false);
     } catch (err) {
@@ -210,19 +229,25 @@ const ImageAnalysis = () => {
         xAxis: {
           label: {
             style: {
-              fill: '#64748b',
-              fontSize: 12
+              fill: '#ffffff',
+              fontSize: 12,
+              fontWeight: 600
             }
-          }
+          },
+          line: { style: { stroke: 'rgba(255,255,255,0.3)' } },
+          grid: { line: { style: { stroke: 'rgba(255,255,255,0.1)', lineDash: [2, 2] } } }
         },
         yAxis: {
           label: {
             formatter: (v) => `${v}%`,
             style: {
-              fill: '#64748b',
-              fontSize: 12
+              fill: '#ffffff',
+              fontSize: 12,
+              fontWeight: 600
             }
-          }
+          },
+          line: { style: { stroke: 'rgba(255,255,255,0.3)' } },
+          grid: { line: { style: { stroke: 'rgba(255,255,255,0.1)', lineDash: [2, 2] } } }
         },
         barStyle: {
           radius: [4, 4, 0, 0]
@@ -230,11 +255,11 @@ const ImageAnalysis = () => {
       };
 
       return (
-        <div className="material-confidence-chart" style={{ marginTop: '2rem' }}>
-          <h6 style={{ marginBottom: '1rem', fontWeight: 700, color: 'var(--dark)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Target size={18} />
+        <div className="material-confidence-chart" style={{ marginTop: '2rem', padding: '2rem', background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(139, 92, 246, 0.08))', border: '2px solid rgba(139, 92, 246, 0.3)', borderRadius: '16px' }}>
+          <h5 style={{ marginBottom: '1.5rem', fontWeight: 700, color: '#ffffff', display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1.1rem' }}>
+            <Target size={20} style={{ color: '#8b5cf6' }} />
             Material Confidence Analysis
-          </h6>
+          </h5>
           <Bar {...config} />
         </div>
       );
@@ -266,11 +291,11 @@ const ImageAnalysis = () => {
           <div className="card-body">
             <div className="upload-zone" onClick={() => fileInputRef.current?.click()}>
               <Upload size={64} style={{ color: 'var(--primary)', marginBottom: '1rem' }} />
-              <h3 style={{ marginBottom: '0.5rem', color: 'var(--dark)' }}>Click to Upload Image</h3>
-              <p style={{ color: 'var(--secondary)', marginBottom: '1rem' }}>
+              <h3 style={{ marginBottom: '0.5rem', color: '#ffffff' }}>Click to Upload Image</h3>
+              <p style={{ color: 'rgba(255,255,255,0.8)', marginBottom: '1rem' }}>
                 PNG, JPG, JPEG • Max 10MB
               </p>
-              <p style={{ color: 'var(--secondary)', fontSize: '0.875rem' }}>
+              <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.875rem' }}>
                 Comprehensive structural analysis including crack detection, biological growth,<br />
                 material classification, and environmental impact assessment
               </p>
@@ -555,9 +580,7 @@ const ImageAnalysis = () => {
                       />
                     </div>
                   </div>
-                  <div className="material-confidence-viz">
-                    <MaterialConfidenceChart materialData={results.material_analysis} />
-                  </div>
+                  <div className="material-confidence-viz"></div>
                 </div>
               </div>
 
