@@ -592,7 +592,7 @@ const Analytics = () => {
               width: '100%',
               background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.08))',
               border: '2px solid rgba(59, 130, 246, 0.25)',
-              minHeight: '600px',
+              minHeight: '800px',
               padding: '2.5rem'
             }}>
               <div className="premium-header">
@@ -914,11 +914,11 @@ const Analytics = () => {
                   };
                   
                   return (
-                    <div className="chart-container-with-insights">
-                      <div className="chart-main">
+                    <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '2rem', alignItems: 'start', width: '100%' }}>
+                      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '450px' }}>
                         <Pie {...config} />
                       </div>
-                      <div className="chart-insights">
+                      <div className="chart-insights" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}>
                         <h4>Severity Analysis</h4>
                         {severityChartData.map((severity, index) => (
                           <div className="insight-row" key={index}>

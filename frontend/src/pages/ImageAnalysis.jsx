@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Bar } from '@ant-design/plots';
 import { useAnalysis } from '../contexts/AnalysisContext';
 import { Camera, Upload, Play, Loader, PieChart, Target, Activity, TrendingUp, CheckCircle, AlertTriangle, BarChart3, Wind, Droplet, Zap, Leaf, Download } from 'lucide-react';
 
@@ -161,112 +160,6 @@ const ImageAnalysis = () => {
       'Critical': 'danger'
     };
     return <span className={`badge bg-${colors[severity] || 'secondary'}`}>{severity}</span>;
-  };
-
-  // Material Confidence Chart Component
-  const MaterialConfidenceChart = ({ materialData }) => {
-    if (!materialData || !materialData.probabilities || typeof materialData.probabilities !== 'object') {
-      return null;
-    }
-
-    try {
-      const materials = Object.keys(materialData.probabilities);
-      const probabilities = Object.values(materialData.probabilities);
-
-      // Ensure we have valid arrays
-      if (!Array.isArray(materials) || !Array.isArray(probabilities) || materials.length === 0) {
-        return null;
-      }
-
-      // Define colors for different materials
-      const materialColors = {
-        'concrete': '#60a5fa',
-        'steel': '#ef4444',
-        'brick': '#f59e0b',
-        'wood': '#10b981',
-        'glass': '#8b5cf6',
-        'stone': '#6b7280',
-        'asphalt': '#374151',
-        'plastic': '#ec4899'
-      };
-
-      // Prepare data for bar chart with comprehensive validation
-      const chartData = materials
-        .filter(material => material && typeof material === 'string' && material.trim() !== '') // Filter out null/undefined/empty materials
-        .map((material, index) => {
-          const confidence = probabilities[index];
-          if (typeof confidence !== 'number' || isNaN(confidence)) {
-            return null; // Skip invalid confidence values
-          }
-          return {
-            material: material.charAt(0).toUpperCase() + material.slice(1), // Capitalize first letter
-            confidence: Math.max(0, Math.min(100, confidence * 100)), // Ensure confidence is between 0-100
-            color: materialColors[material.toLowerCase()] || '#60a5fa'
-          };
-        })
-        .filter(item => item !== null); // Remove any null entries
-
-      // If no valid data after filtering, don't render the chart
-      if (!chartData || chartData.length === 0) {
-        return null;
-      }
-
-      const config = {
-        data: chartData,
-        xField: 'material',
-        yField: 'confidence',
-        colorField: 'color', // Use the color field directly
-        label: {
-          position: 'middle',
-          style: {
-            fill: '#FFFFFF',
-            opacity: 0.8,
-            fontSize: 12,
-            fontWeight: 500
-          },
-          formatter: (datum) => `${datum.confidence?.toFixed(1) || 0}%`
-        },
-        xAxis: {
-          label: {
-            style: {
-              fill: '#ffffff',
-              fontSize: 12,
-              fontWeight: 600
-            }
-          },
-          line: { style: { stroke: 'rgba(255,255,255,0.3)' } },
-          grid: { line: { style: { stroke: 'rgba(255,255,255,0.1)', lineDash: [2, 2] } } }
-        },
-        yAxis: {
-          label: {
-            formatter: (v) => `${v}%`,
-            style: {
-              fill: '#ffffff',
-              fontSize: 12,
-              fontWeight: 600
-            }
-          },
-          line: { style: { stroke: 'rgba(255,255,255,0.3)' } },
-          grid: { line: { style: { stroke: 'rgba(255,255,255,0.1)', lineDash: [2, 2] } } }
-        },
-        barStyle: {
-          radius: [4, 4, 0, 0]
-        }
-      };
-
-      return (
-        <div className="material-confidence-chart" style={{ marginTop: '2rem', padding: '2rem', background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(139, 92, 246, 0.08))', border: '2px solid rgba(139, 92, 246, 0.3)', borderRadius: '16px' }}>
-          <h5 style={{ marginBottom: '1.5rem', fontWeight: 700, color: '#ffffff', display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1.1rem' }}>
-            <Target size={20} style={{ color: '#8b5cf6' }} />
-            Material Confidence Analysis
-          </h5>
-          <Bar {...config} />
-        </div>
-      );
-    } catch (error) {
-      console.error('Error rendering Material Confidence Chart:', error);
-      return null;
-    }
   };
 
   return (
