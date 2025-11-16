@@ -468,19 +468,17 @@ h1, h2, h3, h4, h5, h6 {
   align-items: center;
   justify-content: center;
   background: 
-    /* White Theme Gradient Overlay */
-    linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.95) 50%, rgba(241, 245, 249, 0.92) 100%),
-    /* Subtle Infrastructure Pattern */
-    linear-gradient(45deg, rgba(59, 130, 246, 0.03) 25%, transparent 25%),
-    linear-gradient(-45deg, rgba(139, 92, 246, 0.02) 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, rgba(59, 130, 246, 0.03) 75%),
-    linear-gradient(-45deg, transparent 75%, rgba(139, 92, 246, 0.02) 75%),
-    /* Creative Accent Gradients */
-    radial-gradient(circle at 30% 20%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
-    radial-gradient(circle at 70% 80%, rgba(139, 92, 246, 0.06) 0%, transparent 50%),
-    radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.04) 0%, transparent 50%),
+    /* Professional Blue-Purple Gradient */
+    linear-gradient(135deg, rgba(59, 130, 246, 0.95) 0%, rgba(99, 102, 241, 0.95) 25%, rgba(139, 92, 246, 0.95) 50%, rgba(168, 85, 247, 0.95) 75%, rgba(139, 92, 246, 0.95) 100%),
     /* Infrastructure Grid Pattern */
-    url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(59,130,246,0.08)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+    linear-gradient(45deg, rgba(255, 255, 255, 0.08) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(255, 255, 255, 0.06) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(255, 255, 255, 0.08) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(255, 255, 255, 0.06) 75%),
+    /* Subtle Accent Gradients */
+    radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 70% 80%, rgba(139, 92, 246, 0.12) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.08) 0%, transparent 50%);
   background-size: 
     cover,
     30px 30px,
@@ -488,15 +486,13 @@ h1, h2, h3, h4, h5, h6 {
     20px 20px,
     20px 20px,
     100% 100%,
-    100% 100%,
-    100px 100px;
+    100% 100%;
   background-position: 
     center,
     0 0,
     0 0,
     10px 10px,
     10px 10px,
-    center,
     center,
     center;
   color: white;
@@ -511,9 +507,9 @@ h1, h2, h3, h4, h5, h6 {
   right: 0;
   bottom: 0;
   background: 
-    radial-gradient(circle at 20% 20%, rgba(0, 212, 255, 0.1) 0%, transparent 40%),
+    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.08) 0%, transparent 40%),
     radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 40%),
-    linear-gradient(135deg, rgba(15, 23, 42, 0.1), rgba(30, 41, 59, 0.05));
+    linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
   z-index: 1;
   animation: gradientShift 8s ease-in-out infinite;
 }
@@ -542,13 +538,11 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   align-items: center;
   gap: 1rem;
-  background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-purple) 50%, var(--accent-cyan) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  background-size: 200% 200%;
-  animation: gradientShift 8s ease-in-out infinite;
+  color: #ffffff;
+  text-shadow: 0 4px 20px rgba(59, 130, 246, 0.5), 0 0 40px rgba(139, 92, 246, 0.3);
   position: relative;
+  letter-spacing: -1px;
+  animation: fadeInUp 1s ease-out 0.2s both;
 }
 
 .hero-title::after {
@@ -565,24 +559,39 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .hero-icon {
-  filter: drop-shadow(0 0 15px rgba(59, 130, 246, 0.3));
-  color: var(--accent-blue);
+  filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.4));
+  color: #ffffff;
   transition: all 0.3s ease;
 }
 
 .hero-icon:hover {
-  filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.5));
+  filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.6));
   transform: scale(1.05);
 }
 
+/* Explicit White Text for All Hero Subtitles */
 .hero-subtitle {
   font-size: 1.5rem;
   margin-bottom: 2rem;
-  opacity: 0.85;
+  opacity: 1;
   line-height: 1.6;
-  color: var(--text-secondary);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-  font-weight: 400;
+  color: #ffffff !important;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+  font-weight: 300;
+  letter-spacing: 0.5px;
+}
+
+/* Explicit White Text Class for InfraVision AI Text */
+.infravision-title {
+  color: #ffffff !important;
+  text-shadow: 0 4px 20px rgba(59, 130, 246, 0.5), 0 0 40px rgba(139, 92, 246, 0.3);
+  font-weight: 900;
+}
+
+/* Explicit White Text for All Subtitles */
+.white-text-subtitle {
+  color: #ffffff !important;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
 }
 
 .hero-features {
@@ -610,11 +619,16 @@ h1, h2, h3, h4, h5, h6 {
 .hero-feature h3 {
   font-size: 1.1rem;
   margin-bottom: 0.25rem;
+  color: #ffffff !important;
+  font-weight: 700;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .hero-feature p {
-  opacity: 0.8;
+  opacity: 1;
   font-size: 0.9rem;
+  color: #ffffff !important;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 }
 
 .feature-icon {
@@ -646,10 +660,11 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: var(--border-radius-xl);
   box-shadow: var(--shadow-glass);
   transition: all 0.3s ease;
-  color: white;
+  color: #ffffff !important;
   font-weight: 600;
   text-align: center;
   min-width: 150px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .floating-card:hover {

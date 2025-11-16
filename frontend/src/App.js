@@ -51,10 +51,10 @@ function App() {
   return (
     <AnalysisProvider>
       <div className="app-container">
-        {/* Hero Section */}
-        <section className="hero-section">
+      {/* Hero Section */}
+      <section className="hero-section">
         <div className="hero-overlay"></div>
-        <div className="hero-content">{}
+        <div className="hero-content">
           <div className="hero-text">
             <h1 className="hero-title">
               <Shield className="hero-icon" size={48} />
