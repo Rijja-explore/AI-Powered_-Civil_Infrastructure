@@ -143,13 +143,23 @@ with warnings.catch_warnings():
         print(f"❌ Failed to import functions from finalwebapp: {e}")
         raise
 
-# Import 3D heightmap generator
+# Import 3D heightmap generators
 try:
     from image_to_heightmap import image_to_stl
-    print("✅ 3D heightmap module loaded successfully")
+    print("✅ 3D heightmap (STL) module loaded successfully")
 except ImportError as e:
-    print(f"⚠️ 3D heightmap module not available: {e}")
+    print(f"⚠️ 3D heightmap (STL) module not available: {e}")
     image_to_stl = None
+
+# Import 3D GLB generator with textures
+try:
+    from image_3d_heightmap import generate_3d_glb_from_image
+    print("✅ 3D GLB generator (textured) module loaded successfully")
+    HEIGHTMAP_GLB_AVAILABLE = True
+except ImportError as e:
+    print(f"⚠️ 3D GLB generator module not available: {e}")
+    generate_3d_glb_from_image = None
+    HEIGHTMAP_GLB_AVAILABLE = False
 
 # Load models directly (not through load_models function since it's now conditional)
 try:
@@ -1815,6 +1825,92 @@ def generate_3d_heightmap():
     
     except Exception as e:
         print(f"❌ 3D heightmap generation error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+# ✅ NEW ENDPOINT: 3D Textured GLB Generator
+@app.route('/api/generate-3d-glb', methods=['POST'])
+def generate_3d_glb():
+    """
+    Convert a 2D image to a 3D textured GLB model.
+    
+    Features:
+    - Creates heightmap from image brightness
+    - Applies colored texture (heatmap + edge detection)
+    - Generates binary GLB format (optimized for web)
+    - Returns model/gltf-binary MIME type
+    
+    Accepts: multipart/form-data with 'image' field
+    Query params (optional):
+        - resize_to: Size (default: 300,300)
+        - height_scale: Height multiplier (default: 12.0)
+        - smooth_sigma: Gaussian smoothing (default: 1.2)
+    
+    Returns: GLB binary file
+    """
+    try:
+        if not HEIGHTMAP_GLB_AVAILABLE or generate_3d_glb_from_image is None:
+            return jsonify({'error': 'GLB generator not available on server'}), 500
+        
+        # Check if image file is provided
+        if 'image' not in request.files:
+            return jsonify({'error': 'No image file provided'}), 400
+        
+        file = request.files['image']
+        if file.filename == '':
+            return jsonify({'error': 'No file selected'}), 400
+        
+        # Get optional parameters
+        resize_to = int(request.args.get('resize_to', 300))
+        height_scale = float(request.args.get('height_scale', 12.0))
+        smooth_sigma = float(request.args.get('smooth_sigma', 1.2))
+        
+        # Save uploaded file temporarily
+        uploads_dir = 'uploads'
+        os.makedirs(uploads_dir, exist_ok=True)
+        
+        temp_filename = f"temp_{uuid.uuid4().hex}.png"
+        temp_path = os.path.join(uploads_dir, temp_filename)
+        file.save(temp_path)
+        
+        try:
+            # Generate GLB from image
+            glb_filename = f"heightmap_{uuid.uuid4().hex}.glb"
+            glb_path = os.path.join(uploads_dir, glb_filename)
+            
+            print(f"🔄 Generating 3D GLB model...")
+            print(f"   - Input: {temp_path}")
+            print(f"   - Resize: {resize_to}x{resize_to}")
+            print(f"   - Height scale: {height_scale}")
+            print(f"   - Smoothing: σ={smooth_sigma}")
+            
+            generate_3d_glb_from_image(
+                input_image_path=temp_path,
+                output_glb_path=glb_path,
+                resize_to=(resize_to, resize_to),
+                height_scale=height_scale,
+                smooth_sigma=smooth_sigma
+            )
+            
+            print(f"✅ 3D GLB generated successfully: {glb_path}")
+            
+            # Send the GLB file
+            return send_file(
+                glb_path,
+                mimetype='model/gltf-binary',
+                as_attachment=True,
+                download_name='heightmap.glb'
+            )
+        
+        finally:
+            # Clean up temporary image file
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+    
+    except Exception as e:
+        print(f"❌ 3D GLB generation error: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
         

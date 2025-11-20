@@ -1,20 +1,147 @@
-import React, { useState, Suspense } from "react";
-import { Canvas, useLoader } from "@react-three/fiber";
-import { OrbitControls, STLLoader } from "@react-three/drei";
-import { Cube, Upload, RotateCw } from "lucide-react";
+import React, { useState, Suspense, useEffect } from "react";
+import { Canvas } from "@react-three/fiber";
+import { OrbitControls } from "@react-three/drei";
+import * as THREE from "three";
+import { Box, Upload, RotateCw, Settings2, Zap } from "lucide-react";
 import "../styles/heightmap3d.css";
 
-function Model({ url }) {
-  const geometry = useLoader(STLLoader, url);
-  return (
-    <mesh geometry={geometry}>
-      <meshPhongMaterial
-        color="#4f46e5"
-        wireframe={false}
-        shininess={100}
-      />
-    </mesh>
-  );
+// Import GLTFLoader for GLB files
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+
+// 3D Model Component (supports both STL and GLB)
+function Model3D({ url, isGLB = false }) {
+  const [model, setModel] = useState(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!url) return;
+
+    const loadModel = async () => {
+      try {
+        if (isGLB) {
+          // Load GLB file
+          const loader = new GLTFLoader();
+          loader.load(
+            url,
+            (gltf) => {
+              setModel(gltf.scene);
+              setError(null);
+            },
+            undefined,
+            (error) => {
+              console.error("GLB loading error:", error);
+              setError("Failed to load 3D model");
+            }
+          );
+        } else {
+          // Load STL file
+          const response = await fetch(url);
+          const arrayBuffer = await response.arrayBuffer();
+          const geometry = parseSTL(arrayBuffer);
+          geometry.center();
+          geometry.computeVertexNormals();
+          
+          const material = new THREE.MeshPhongMaterial({
+            color: "#4f46e5",
+            wireframe: false,
+            shininess: 100,
+            side: THREE.DoubleSide,
+          });
+          
+          const mesh = new THREE.Mesh(geometry, material);
+          const group = new THREE.Group();
+          group.add(mesh);
+          setModel(group);
+          setError(null);
+        }
+      } catch (err) {
+        console.error("Error loading model:", err);
+        setError("Failed to load 3D model");
+      }
+    };
+
+    loadModel();
+  }, [url, isGLB]);
+
+  if (error) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "#991b1b" }}>
+        <span style={{ fontSize: "1rem", fontWeight: 600 }}>❌ {error}</span>
+      </div>
+    );
+  }
+
+  if (!model) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "#999" }}>
+        <RotateCw size={32} style={{ animation: "spin 1s linear infinite" }} />
+        <span style={{ marginLeft: "1rem" }}>Loading 3D Model...</span>
+      </div>
+    );
+  }
+
+  return <primitive object={model} />;
+}
+
+function parseSTL(arrayBuffer) {
+  const view = new DataView(arrayBuffer);
+  const isASCII = isASCIIFile(arrayBuffer);
+
+  if (isASCII) {
+    return parseASCIISTL(new TextDecoder().decode(arrayBuffer));
+  } else {
+    return parseBinarySTL(view);
+  }
+}
+
+function isASCIIFile(arrayBuffer) {
+  const view = new Uint8Array(arrayBuffer);
+  const header = new TextDecoder().decode(view.slice(0, 5));
+  return header.toLowerCase() === "solid";
+}
+
+function parseBinarySTL(view) {
+  const triangles = view.getUint32(80, true);
+  const geometry = new THREE.BufferGeometry();
+  const vertices = [];
+  const normals = [];
+
+  let offset = 84;
+  for (let i = 0; i < triangles; i++) {
+    const nx = view.getFloat32(offset, true); offset += 4;
+    const ny = view.getFloat32(offset, true); offset += 4;
+    const nz = view.getFloat32(offset, true); offset += 4;
+
+    for (let j = 0; j < 3; j++) {
+      vertices.push(view.getFloat32(offset, true)); offset += 4;
+      vertices.push(view.getFloat32(offset, true)); offset += 4;
+      vertices.push(view.getFloat32(offset, true)); offset += 4;
+      normals.push(nx, ny, nz);
+    }
+
+    offset += 2;
+  }
+
+  geometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(vertices), 3));
+  geometry.setAttribute("normal", new THREE.BufferAttribute(new Float32Array(normals), 3));
+
+  return geometry;
+}
+
+function parseASCIISTL(data) {
+  const geometry = new THREE.BufferGeometry();
+  const vertexPattern = /vertex\s+([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)\s+([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)\s+([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)/g;
+  const vertices = [];
+
+  let vertexMatch;
+  while ((vertexMatch = vertexPattern.exec(data)) !== null) {
+    vertices.push(parseFloat(vertexMatch[1]), parseFloat(vertexMatch[3]), parseFloat(vertexMatch[5]));
+  }
+
+  geometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(vertices), 3));
+  geometry.computeVertexNormals();
+
+  return geometry;
 }
 
 function LoadingSpinner() {
@@ -28,11 +155,18 @@ function LoadingSpinner() {
 
 export default function Heightmap3D() {
   const [modelUrl, setModelUrl] = useState(null);
+  const [modelType, setModelType] = useState("glb");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [fileName, setFileName] = useState(null);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [settings, setSettings] = useState({
+    resize_to: 300,
+    height_scale: 12.0,
+    smooth_sigma: 1.2,
+  });
 
-  async function handleUpload(e) {
+  async function handleUpload(e, useGLB = true) {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -44,7 +178,19 @@ export default function Heightmap3D() {
       const formData = new FormData();
       formData.append("image", file);
 
-      const res = await fetch("http://localhost:5002/api/generate-3d-heightmap", {
+      const endpoint = useGLB ? "/api/generate-3d-glb" : "/api/generate-3d-heightmap";
+      
+      let url = `http://localhost:5002${endpoint}`;
+      if (useGLB) {
+        const params = new URLSearchParams({
+          resize_to: settings.resize_to,
+          height_scale: settings.height_scale,
+          smooth_sigma: settings.smooth_sigma,
+        });
+        url += `?${params.toString()}`;
+      }
+
+      const res = await fetch(url, {
         method: "POST",
         body: formData,
       });
@@ -54,8 +200,9 @@ export default function Heightmap3D() {
       }
 
       const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      setModelUrl(url);
+      const blobUrl = URL.createObjectURL(blob);
+      setModelUrl(blobUrl);
+      setModelType(useGLB ? "glb" : "stl");
     } catch (err) {
       setError(`Failed to generate 3D model: ${err.message}`);
       console.error("Upload error:", err);
@@ -70,11 +217,11 @@ export default function Heightmap3D() {
         {/* Header */}
         <div style={{ marginBottom: "2rem" }}>
           <h1 style={{ display: "flex", alignItems: "center", gap: "0.75rem", margin: 0, color: "var(--dark)", fontSize: "2rem", fontWeight: 700 }}>
-            <Cube size={32} style={{ color: "#4f46e5" }} />
+            <Box size={32} style={{ color: "#4f46e5" }} />
             3D Heightmap Generator
           </h1>
           <p style={{ margin: "0.5rem 0 0 0", color: "var(--secondary)", fontSize: "1rem" }}>
-            Convert 2D structural images into interactive 3D heightmaps for advanced visualization
+            Convert 2D structural images into interactive 3D models (GLB textured or STL) for advanced visualization
           </p>
         </div>
 
@@ -86,10 +233,110 @@ export default function Heightmap3D() {
               Upload Structural Image
             </h2>
             <p style={{ margin: "0.25rem 0 0 0", color: "var(--secondary)", fontSize: "0.875rem" }}>
-              Select a 2D image (JPG, PNG) to convert into a 3D heightmap STL file
+              Select a 2D image (JPG, PNG) to convert into a 3D model
             </p>
           </div>
           <div className="card-body">
+            {/* Format & Settings */}
+            <div style={{ marginBottom: "1.5rem", display: "flex", gap: "1rem", flexWrap: "wrap", alignItems: "center" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <label style={{ fontWeight: 600, color: "var(--dark)" }}>Format:</label>
+                <select
+                  style={{
+                    padding: "0.5rem 1rem",
+                    borderRadius: "var(--border-radius)",
+                    border: "1px solid var(--glass-border)",
+                    backgroundColor: "white",
+                    color: "var(--dark)",
+                    cursor: "pointer",
+                    fontWeight: 600,
+                  }}
+                >
+                  <option>🎨 GLB (Textured) - Recommended</option>
+                  <option>⚪ STL (Monochrome)</option>
+                </select>
+              </div>
+              
+              <button
+                onClick={() => setShowAdvanced(!showAdvanced)}
+                style={{
+                  marginLeft: "auto",
+                  padding: "0.5rem 1rem",
+                  backgroundColor: showAdvanced ? "#4f46e5" : "#e5e7eb",
+                  color: showAdvanced ? "white" : "var(--dark)",
+                  border: "none",
+                  borderRadius: "var(--border-radius)",
+                  cursor: "pointer",
+                  fontWeight: 600,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                }}
+              >
+                <Settings2 size={18} />
+                Advanced
+              </button>
+            </div>
+
+            {/* Advanced Settings */}
+            {showAdvanced && (
+              <div style={{
+                marginBottom: "1.5rem",
+                padding: "1rem",
+                backgroundColor: "rgba(79, 70, 229, 0.05)",
+                border: "1px solid var(--glass-border)",
+                borderRadius: "var(--border-radius)",
+              }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
+                  <div>
+                    <label style={{ display: "block", fontWeight: 600, color: "var(--dark)", marginBottom: "0.5rem", fontSize: "0.875rem" }}>
+                      Resolution: {settings.resize_to}×{settings.resize_to}
+                    </label>
+                    <input
+                      type="range"
+                      min="100"
+                      max="500"
+                      step="50"
+                      value={settings.resize_to}
+                      onChange={(e) => setSettings({ ...settings, resize_to: parseInt(e.target.value) })}
+                      style={{ width: "100%" }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: "block", fontWeight: 600, color: "var(--dark)", marginBottom: "0.5rem", fontSize: "0.875rem" }}>
+                      Height Scale: {settings.height_scale.toFixed(1)}
+                    </label>
+                    <input
+                      type="range"
+                      min="2"
+                      max="30"
+                      step="0.5"
+                      value={settings.height_scale}
+                      onChange={(e) => setSettings({ ...settings, height_scale: parseFloat(e.target.value) })}
+                      style={{ width: "100%" }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: "block", fontWeight: 600, color: "var(--dark)", marginBottom: "0.5rem", fontSize: "0.875rem" }}>
+                      Smoothing (σ): {settings.smooth_sigma.toFixed(1)}
+                    </label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="5"
+                      step="0.1"
+                      value={settings.smooth_sigma}
+                      onChange={(e) => setSettings({ ...settings, smooth_sigma: parseFloat(e.target.value) })}
+                      style={{ width: "100%" }}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Upload Area */}
             <div
               style={{
                 display: "flex",
@@ -101,21 +348,16 @@ export default function Heightmap3D() {
                 borderRadius: "var(--border-radius)",
                 backgroundColor: "rgba(79, 70, 229, 0.05)",
                 cursor: "pointer",
-                transition: "all 0.3s ease",
               }}
               onDragOver={(e) => {
                 e.preventDefault();
                 e.currentTarget.style.borderColor = "#4f46e5";
-                e.currentTarget.style.backgroundColor = "rgba(79, 70, 229, 0.1)";
               }}
               onDragLeave={(e) => {
                 e.currentTarget.style.borderColor = "var(--glass-border)";
-                e.currentTarget.style.backgroundColor = "rgba(79, 70, 229, 0.05)";
               }}
               onDrop={(e) => {
                 e.preventDefault();
-                e.currentTarget.style.borderColor = "var(--glass-border)";
-                e.currentTarget.style.backgroundColor = "rgba(79, 70, 229, 0.05)";
                 if (e.dataTransfer.files.length > 0) {
                   const fileInput = document.querySelector('input[type="file"]');
                   fileInput.files = e.dataTransfer.files;
@@ -129,13 +371,13 @@ export default function Heightmap3D() {
                   Drop your image here or click to browse
                 </p>
                 <p style={{ margin: 0, fontSize: "0.875rem", color: "var(--secondary)" }}>
-                  Supported formats: JPG, PNG, GIF, BMP
+                  Supported: JPG, PNG, GIF, BMP
                 </p>
               </div>
               <input
                 type="file"
                 accept="image/*"
-                onChange={handleUpload}
+                onChange={(e) => handleUpload(e, true)}
                 style={{ display: "none" }}
                 id="imageUpload"
               />
@@ -148,111 +390,85 @@ export default function Heightmap3D() {
                   borderRadius: "var(--border-radius)",
                   cursor: "pointer",
                   fontWeight: 600,
-                  transition: "background 0.3s ease",
                 }}
-                onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#3730a3")}
-                onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#4f46e5")}
               >
                 Choose File
               </label>
             </div>
 
-            {/* File Name & Status */}
             {fileName && (
               <div style={{ marginTop: "1rem", padding: "1rem", backgroundColor: "rgba(79, 70, 229, 0.1)", borderRadius: "var(--border-radius)" }}>
-                <p style={{ margin: 0, color: "var(--dark)", fontWeight: 600 }}>
-                  📄 {fileName}
-                </p>
+                <p style={{ margin: 0, color: "var(--dark)", fontWeight: 600 }}>📄 {fileName}</p>
               </div>
             )}
 
-            {/* Loading State */}
             {loading && (
               <div style={{ marginTop: "1rem", padding: "1rem", textAlign: "center", color: "#666" }}>
                 <RotateCw size={24} style={{ animation: "spin 1s linear infinite", marginBottom: "0.5rem" }} />
-                <p style={{ margin: 0, fontWeight: 600 }}>Generating 3D heightmap... This may take a moment</p>
+                <p style={{ margin: 0, fontWeight: 600 }}>Generating 3D model...</p>
               </div>
             )}
 
-            {/* Error State */}
             {error && (
               <div style={{ marginTop: "1rem", padding: "1rem", backgroundColor: "#fee2e2", border: "1px solid #fecaca", borderRadius: "var(--border-radius)", color: "#991b1b" }}>
                 <p style={{ margin: 0, fontWeight: 600 }}>❌ {error}</p>
               </div>
             )}
 
-            {/* Success State */}
             {modelUrl && !loading && (
               <div style={{ marginTop: "1rem", padding: "1rem", backgroundColor: "#dcfce7", border: "1px solid #bbf7d0", borderRadius: "var(--border-radius)", color: "#166534" }}>
-                <p style={{ margin: 0, fontWeight: 600 }}>✅ 3D heightmap generated successfully! Scroll to explore.</p>
+                <p style={{ margin: 0, fontWeight: 600 }}>✅ 3D model generated successfully!</p>
               </div>
             )}
           </div>
         </div>
 
-        {/* 3D Viewer Card */}
+        {/* 3D Viewer */}
         {modelUrl && (
           <div className="card">
             <div className="card-header">
               <h2 style={{ margin: 0, display: "flex", alignItems: "center", gap: "0.6rem" }}>
-                <Cube size={24} />
-                Interactive 3D Heightmap Viewer
+                <Box size={24} />
+                Interactive 3D {modelType === "glb" ? "Textured" : "STL"} Viewer
               </h2>
-              <p style={{ margin: "0.25rem 0 0 0", color: "var(--secondary)", fontSize: "0.875rem" }}>
-                Use mouse to rotate, scroll to zoom, middle-click to pan
-              </p>
             </div>
             <div className="card-body">
               <div style={{ height: "700px", borderRadius: "var(--border-radius)", overflow: "hidden", border: "1px solid var(--glass-border)" }}>
-                <Canvas camera={{ position: [100, 100, 100], fov: 50 }}>
+                <Canvas camera={{ position: [150, 150, 150], fov: 50 }}>
                   <ambientLight intensity={0.6} />
                   <directionalLight position={[10, 10, 10]} intensity={0.8} />
                   <pointLight position={[-10, -10, -10]} intensity={0.3} />
                   
                   <Suspense fallback={<LoadingSpinner />}>
-                    <Model url={modelUrl} />
+                    <Model3D url={modelUrl} isGLB={modelType === "glb"} />
                   </Suspense>
                   
-                  <OrbitControls
-                    autoRotate={false}
-                    autoRotateSpeed={4}
-                    enableZoom={true}
-                    enablePan={true}
-                    enableRotate={true}
-                  />
+                  <OrbitControls autoRotate={false} enableZoom={true} enablePan={true} enableRotate={true} />
                 </Canvas>
               </div>
 
-              {/* Model Info */}
-              <div style={{ marginTop: "1.5rem", padding: "1rem", backgroundColor: "var(--light)", borderRadius: "var(--border-radius)", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
+              <div style={{ marginTop: "1.5rem", padding: "1rem", backgroundColor: "var(--light)", borderRadius: "var(--border-radius)", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "1rem" }}>
+                <div>
+                  <p style={{ margin: 0, fontSize: "0.875rem", color: "var(--secondary)" }}>Type</p>
+                  <p style={{ margin: "0.25rem 0 0 0", fontWeight: 600 }}>{modelType === "glb" ? "GLB" : "STL"}</p>
+                </div>
                 <div>
                   <p style={{ margin: 0, fontSize: "0.875rem", color: "var(--secondary)" }}>Resolution</p>
-                  <p style={{ margin: "0.25rem 0 0 0", fontWeight: 600, color: "var(--dark)" }}>200 × 200 pixels</p>
+                  <p style={{ margin: "0.25rem 0 0 0", fontWeight: 600 }}>{settings.resize_to}×{settings.resize_to}</p>
                 </div>
                 <div>
-                  <p style={{ margin: 0, fontSize: "0.875rem", color: "var(--secondary)" }}>Height Scale</p>
-                  <p style={{ margin: "0.25rem 0 0 0", fontWeight: 600, color: "var(--dark)" }}>10.0 units</p>
-                </div>
-                <div>
-                  <p style={{ margin: 0, fontSize: "0.875rem", color: "var(--secondary)" }}>Smoothing</p>
-                  <p style={{ margin: "0.25rem 0 0 0", fontWeight: 600, color: "var(--dark)" }}>Gaussian (σ=1.0)</p>
-                </div>
-                <div>
-                  <p style={{ margin: 0, fontSize: "0.875rem", color: "var(--secondary)" }}>Format</p>
-                  <p style={{ margin: "0.25rem 0 0 0", fontWeight: 600, color: "var(--dark)" }}>STL (ASCII)</p>
+                  <p style={{ margin: 0, fontSize: "0.875rem", color: "var(--secondary)" }}>Height</p>
+                  <p style={{ margin: "0.25rem 0 0 0", fontWeight: 600 }}>{settings.height_scale.toFixed(1)}</p>
                 </div>
               </div>
 
-              {/* Download Button */}
               <div style={{ marginTop: "1.5rem", display: "flex", gap: "1rem" }}>
                 <button
                   onClick={() => {
                     const link = document.createElement("a");
                     link.href = modelUrl;
-                    link.download = "heightmap.stl";
-                    document.body.appendChild(link);
+                    link.download = `heightmap.${modelType}`;
                     link.click();
-                    document.body.removeChild(link);
                   }}
                   style={{
                     padding: "0.75rem 1.5rem",
@@ -262,13 +478,9 @@ export default function Heightmap3D() {
                     borderRadius: "var(--border-radius)",
                     cursor: "pointer",
                     fontWeight: 600,
-                    fontSize: "1rem",
-                    transition: "background 0.3s ease",
                   }}
-                  onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#3730a3")}
-                  onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#4f46e5")}
                 >
-                  📥 Download STL File
+                  📥 Download
                 </button>
                 <button
                   onClick={() => {
@@ -283,83 +495,50 @@ export default function Heightmap3D() {
                     borderRadius: "var(--border-radius)",
                     cursor: "pointer",
                     fontWeight: 600,
-                    fontSize: "1rem",
-                    transition: "background 0.3s ease",
                   }}
-                  onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#d1d5db")}
-                  onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#e5e7eb")}
                 >
-                  🔄 Generate New
+                  🔄 New Model
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* Features Section */}
+        {/* Features */}
         <div style={{ marginTop: "3rem", padding: "2rem", backgroundColor: "var(--light)", borderRadius: "var(--border-radius)", border: "1px solid var(--glass-border)" }}>
-          <h3 style={{ margin: "0 0 1rem 0", color: "var(--dark)", fontSize: "1.25rem", fontWeight: 600 }}>
-            ✨ Features
-          </h3>
+          <h3 style={{ margin: "0 0 1.5rem 0", color: "var(--dark)", fontSize: "1.25rem", fontWeight: 600 }}>✨ Features</h3>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "1.5rem" }}>
             <div>
               <p style={{ margin: 0, fontWeight: 600, color: "var(--dark)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                🎨 Automatic Conversion
+                <Zap size={18} /> 🎨 Textured GLB
               </p>
-              <p style={{ margin: "0.5rem 0 0 0", fontSize: "0.875rem", color: "var(--secondary)" }}>
-                Converts 2D structural images to 3D heightmaps automatically using brightness values
-              </p>
+              <p style={{ margin: "0.5rem 0 0 0", fontSize: "0.875rem", color: "var(--secondary)" }}>Advanced generation with heatmap colors and edge detection</p>
             </div>
             <div>
-              <p style={{ margin: 0, fontWeight: 600, color: "var(--dark)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                🔍 Interactive Viewer
-              </p>
-              <p style={{ margin: "0.5rem 0 0 0", fontSize: "0.875rem", color: "var(--secondary)" }}>
-                Rotate, zoom, and pan to explore 3D structure from all angles in real-time
-              </p>
+              <p style={{ margin: 0, fontWeight: 600, color: "var(--dark)" }}>⚪ Monochrome STL</p>
+              <p style={{ margin: "0.5rem 0 0 0", fontSize: "0.875rem", color: "var(--secondary)" }}>Traditional format for 3D printing and CAD</p>
             </div>
             <div>
-              <p style={{ margin: 0, fontWeight: 600, color: "var(--dark)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                💾 STL Export
-              </p>
-              <p style={{ margin: "0.5rem 0 0 0", fontSize: "0.875rem", color: "var(--secondary)" }}>
-                Download STL files for 3D printing, CAD analysis, or further processing
-              </p>
+              <p style={{ margin: 0, fontWeight: 600, color: "var(--dark)" }}>🔍 Interactive</p>
+              <p style={{ margin: "0.5rem 0 0 0", fontSize: "0.875rem", color: "var(--secondary)" }}>Real-time 3D visualization with full controls</p>
             </div>
             <div>
-              <p style={{ margin: 0, fontWeight: 600, color: "var(--dark)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                ⚙️ Advanced Processing
-              </p>
-              <p style={{ margin: "0.5rem 0 0 0", fontSize: "0.875rem", color: "var(--secondary)" }}>
-                Gaussian smoothing, automatic scaling, and intelligent mesh generation
-              </p>
+              <p style={{ margin: 0, fontWeight: 600, color: "var(--dark)" }}>⚙️ Customizable</p>
+              <p style={{ margin: "0.5rem 0 0 0", fontSize: "0.875rem", color: "var(--secondary)" }}>Adjust resolution, height, and smoothing</p>
             </div>
             <div>
-              <p style={{ margin: 0, fontWeight: 600, color: "var(--dark)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                🏗️ Infrastructure Ready
-              </p>
-              <p style={{ margin: "0.5rem 0 0 0", fontSize: "0.875rem", color: "var(--secondary)" }}>
-                Perfect for structural health monitoring and damage visualization
-              </p>
+              <p style={{ margin: 0, fontWeight: 600, color: "var(--dark)" }}>💾 Export Options</p>
+              <p style={{ margin: "0.5rem 0 0 0", fontSize: "0.875rem", color: "var(--secondary)" }}>Download GLB or STL files</p>
             </div>
             <div>
-              <p style={{ margin: 0, fontWeight: 600, color: "var(--dark)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                🚀 Real-time Processing
-              </p>
-              <p style={{ margin: "0.5rem 0 0 0", fontSize: "0.875rem", color: "var(--secondary)" }}>
-                Fast conversion with instant 3D preview and visualization
-              </p>
+              <p style={{ margin: 0, fontWeight: 600, color: "var(--dark)" }}>🏗️ Infrastructure Ready</p>
+              <p style={{ margin: "0.5rem 0 0 0", fontSize: "0.875rem", color: "var(--secondary)" }}>Perfect for structural health monitoring</p>
             </div>
           </div>
         </div>
       </div>
 
-      <style>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
+      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }
