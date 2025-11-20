@@ -33,7 +33,8 @@ import warnings
 import base64
 import io
 import json
-from flask import Flask, request, jsonify
+import uuid
+from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 
 try:
@@ -141,6 +142,14 @@ with warnings.catch_warnings():
     except Exception as e:
         print(f"❌ Failed to import functions from finalwebapp: {e}")
         raise
+
+# Import 3D heightmap generator
+try:
+    from image_to_heightmap import image_to_stl
+    print("✅ 3D heightmap module loaded successfully")
+except ImportError as e:
+    print(f"⚠️ 3D heightmap module not available: {e}")
+    image_to_stl = None
 
 # Load models directly (not through load_models function since it's now conditional)
 try:
@@ -1744,6 +1753,69 @@ def download_report():
     except Exception as e:
         print(f"❌ Download report error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ✅ NEW ENDPOINT: 3D Heightmap Generator
+@app.route('/api/generate-3d-heightmap', methods=['POST'])
+def generate_3d_heightmap():
+    """
+    Convert a 2D image to a 3D STL heightmap.
+    
+    Accepts: multipart/form-data with 'image' field
+    Returns: STL file
+    """
+    try:
+        if image_to_stl is None:
+            return jsonify({'error': 'Heightmap module not available'}), 500
+        
+        # Check if image file is provided
+        if 'image' not in request.files:
+            return jsonify({'error': 'No image file provided'}), 400
+        
+        file = request.files['image']
+        if file.filename == '':
+            return jsonify({'error': 'No file selected'}), 400
+        
+        # Save uploaded file temporarily
+        uploads_dir = 'uploads'
+        os.makedirs(uploads_dir, exist_ok=True)
+        
+        temp_filename = f"temp_{uuid.uuid4().hex}.png"
+        temp_path = os.path.join(uploads_dir, temp_filename)
+        file.save(temp_path)
+        
+        try:
+            # Generate STL from image
+            stl_filename = f"heightmap_{uuid.uuid4().hex}.stl"
+            stl_path = os.path.join(uploads_dir, stl_filename)
+            
+            image_to_stl(
+                input_image_path=temp_path,
+                output_stl_path=stl_path,
+                resize_to=(200, 200),
+                height_scale=10.0,
+                smooth_sigma=1.0,
+                flip_y=True
+            )
+            
+            print(f"✅ 3D heightmap generated: {stl_path}")
+            
+            # Send the STL file
+            return send_file(
+                stl_path,
+                mimetype='model/stl',
+                as_attachment=True,
+                download_name='heightmap.stl'
+            )
+        
+        finally:
+            # Clean up temporary image file
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+    
+    except Exception as e:
+        print(f"❌ 3D heightmap generation error: {e}")
+        return jsonify({'error': str(e)}), 500
 
         
 if __name__ == '__main__':

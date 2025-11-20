@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { Camera, Video, Activity, BarChart3, Leaf, Shield, Zap, Eye, Wifi, WifiOff, Clock, AlertTriangle } from 'lucide-react';
+import { Camera, Video, Activity, BarChart3, Leaf, Shield, Zap, Eye, Wifi, WifiOff, Clock, AlertTriangle, Cube } from 'lucide-react';
 import './styles/main.css';
 
 // Import pages
@@ -8,6 +8,7 @@ import VideoAnalysis from './pages/VideoAnalysis';
 import RealTimeMonitoring from './pages/RealTimeMonitoring';
 import Analytics from './pages/Analytics';
 import About from './pages/About';
+import Heightmap3D from './pages/Heightmap3D';
 import { AnalysisProvider } from './contexts/AnalysisContext';
   
 
@@ -38,6 +39,7 @@ function App() {
   const routes = [
     { id: 'image-analysis', label: 'Image Analysis', Icon: Camera, Component: ImageAnalysis, description: 'AI-powered crack detection & material analysis' },
     { id: 'video-analysis', label: 'Video Analysis', Icon: Video, Component: VideoAnalysis, description: 'Real-time video monitoring & processing' },
+    { id: '3d-heightmap', label: '3D Heightmap', Icon: Cube, Component: Heightmap3D, description: 'Convert 2D images to 3D heightmaps' },
     { id: 'analytics', label: 'Quick Analytics', Icon: BarChart3, Component: Analytics, description: 'Quick project insights & statistics' },
     { id: 'about', label: 'About', Icon: Shield, Component: About, description: 'About our technology & methodology' }
   ];

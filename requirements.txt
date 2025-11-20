@@ -52,6 +52,7 @@ psycopg2-binary==2.9.7
 # Image Analysis & Processing
 Pillow-SIMD==9.2.0
 imutils==0.5.4
+trimesh==3.21.0
 
 # Utilities
 python-dotenv==1.0.0
