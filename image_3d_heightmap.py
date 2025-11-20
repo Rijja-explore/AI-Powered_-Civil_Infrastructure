@@ -1,18 +1,28 @@
-# --------------------------------------------------------------
-# HEIGHTMAP + TEXTURE 3D MODEL GENERATOR (GLB FORMAT)
-# Generates textured 3D GLB models from 2D images
-# Requires: pip install pillow numpy trimesh scipy opencv-python matplotlib
-# --------------------------------------------------------------
+"""
+FINAL PIPELINE: 2D image → processed overlay → 3D colored GLB heightmap
+
+What it does:
+    1) Load a normal 2D image
+    2) Create:
+        - heatmap from grayscale
+        - Canny edge map
+        - overlay = original + heatmap + edges
+    3) Use grayscale as heightmap → build 3D mesh
+    4) Use overlay image as vertex colors
+    5) Export .glb you can view & rotate (e.g. Blender, Three.js, React Three Fiber)
+"""
 
 import numpy as np
 from PIL import Image
 import cv2
 from scipy.ndimage import gaussian_filter
 import trimesh
-from trimesh.exchange import gltf
 import os
-import tempfile
 
+
+# ==============================================================
+# FUNCTION 1: CREATE HEATMAP + CANNY + ORIGINAL OVERLAY
+# ==============================================================
 
 def make_processed_image(input_path, resize_to=(300, 300)):
     """
@@ -23,35 +33,40 @@ def make_processed_image(input_path, resize_to=(300, 300)):
         resize_to: Tuple (width, height) for resizing
     
     Returns:
-        combined: RGB image with heatmap + edges
+        combined: RGB image with original + heatmap + edges overlay
         gray: Grayscale version for heightmap
     """
+    # --- Load image and resize ---
     img = Image.open(input_path).convert("RGB")
     img = img.resize(resize_to, Image.LANCZOS)
-    img_np = np.array(img)
+    img_np = np.array(img)                     # (H, W, 3), uint8
 
-    # Convert to grayscale for heightmap
-    gray = cv2.cvtColor(img_np, cv2.COLOR_RGB2GRAY)
+    # --- Grayscale for depth/height ---
+    gray = cv2.cvtColor(img_np, cv2.COLOR_RGB2GRAY)  # (H, W), uint8
 
-    # Apply jet colormap for heatmap visualization
-    heatmap = cv2.applyColorMap(gray, cv2.COLORMAP_JET)
-    heatmap = cv2.cvtColor(heatmap, cv2.COLOR_BGR2RGB)
+    # --- Heatmap from grayscale ---
+    heatmap_bgr = cv2.applyColorMap(gray, cv2.COLORMAP_JET)   # BGR
+    heatmap = cv2.cvtColor(heatmap_bgr, cv2.COLOR_BGR2RGB)    # convert to RGB
 
-    # Extract edges for detail
-    edges = cv2.Canny(gray, 80, 160)
+    # --- Canny edges ---
+    edges = cv2.Canny(gray, 80, 160)          # (H, W), 0–255
     edges_rgb = np.zeros_like(img_np)
-    edges_rgb[..., 0] = edges  # Red channel for edges
+    edges_rgb[..., 0] = edges                 # put edges in RED channel
 
-    # Combine heatmap and edges for rich texture
+    # --- Combine: original + heatmap + edges ---
     combined = (
-        (0.5 * heatmap.astype(float)) +
-        (1 * edges_rgb.astype(float))
+        0.6 * img_np.astype(float) +
+        0.3 * heatmap.astype(float) +
+        0.6 * edges_rgb.astype(float)
     )
-
     combined = np.clip(combined, 0, 255).astype(np.uint8)
 
     return combined, gray
 
+
+# ==============================================================
+# FUNCTION 2: CONVERT TO 3D HEIGHTMAP + ADD TEXTURE COLORS
+# ==============================================================
 
 def make_3d_glb(
     gray_img,
@@ -62,40 +77,46 @@ def make_3d_glb(
     flip_y=True
 ):
     """
-    Convert grayscale heightmap to 3D GLB model with texture.
-    
+    Converts grayscale heightmap → 3D mesh (GLB) with vertex colors from color_img.
+
     Args:
-        gray_img: Grayscale image for height values
-        color_img: RGB image for texture/color
-        output_path: Path to save GLB file
-        height_scale: Scale factor for height
-        smooth_sigma: Gaussian smoothing sigma
-        flip_y: Whether to flip Y axis
-    
-    Returns:
-        output_path: Path to generated GLB file
+        gray_img    : (H, W) uint8 or float, used as height
+        color_img   : (H, W, 3) uint8, used as vertex colors
+        output_path : path to .glb file to save
+        height_scale: how tall the displacement will be
+        smooth_sigma: Gaussian blur strength (0 = no smoothing)
+        flip_y      : flip Y axis so mesh appears upright in many viewers
     """
-    # Apply smoothing to create smooth surface
+
+    # Ensure numpy arrays
+    gray = np.array(gray_img).astype(float)
+    color = np.array(color_img).astype(np.uint8)
+
+    h, w = gray.shape
+    assert color.shape[0] == h and color.shape[1] == w, \
+        "gray_img and color_img must have same height/width"
+
+    # --- Smooth height to reduce noise ---
     if smooth_sigma > 0:
-        gray_img = gaussian_filter(gray_img, sigma=smooth_sigma)
+        gray = gaussian_filter(gray, sigma=smooth_sigma)
 
-    # Normalize grayscale to 0-1 range
-    arr_min, arr_max = gray_img.min(), gray_img.max()
-    norm = (gray_img - arr_min) / (arr_max - arr_min + 1e-9)
+    # --- Normalize height 0..1 ---
+    arr_min, arr_max = gray.min(), gray.max()
+    norm = (gray - arr_min) / (arr_max - arr_min + 1e-9)
     height = norm * height_scale
-    h, w = height.shape
 
-    # Create vertex positions
-    verts = np.zeros((h * w, 3), dtype=np.float32)
+    # --- Create vertices (grid) ---
+    verts = np.zeros((h * w, 3), dtype=float)
     for y in range(h):
         for x in range(w):
             z = float(height[y, x])
+            idx = y * w + x
             if flip_y:
-                verts[y * w + x] = [x, (h - 1 - y), z]
+                verts[idx] = [x, (h - 1 - y), z]
             else:
-                verts[y * w + x] = [x, y, z]
+                verts[idx] = [x, y, z]
 
-    # Create triangle faces
+    # --- Create faces (two triangles per pixel-square) ---
     faces = []
     for y in range(h - 1):
         for x in range(w - 1):
@@ -106,18 +127,15 @@ def make_3d_glb(
             d = i + w + 1
             faces.append([a, b, c])
             faces.append([b, d, c])
-    faces = np.array(faces, dtype=np.uint32)
+    faces = np.array(faces, dtype=np.int64)
 
-    # Prepare vertex colors from color image
-    color_img_resized = color_img.reshape(-1, 3)
-    
-    # Add alpha channel (full opacity)
-    colors = np.hstack([
-        color_img_resized.astype(np.uint8),
-        np.full((color_img_resized.shape[0], 1), 255, dtype=np.uint8)
-    ])
+    # --- Flatten color image into vertex colors (RGBA) ---
+    color_flat = color.reshape(-1, 3)                 # (N, 3)
+    alpha = np.full((color_flat.shape[0], 1), 255,
+                    dtype=np.uint8)                   # (N, 1)
+    colors = np.hstack([color_flat, alpha])           # (N, 4)
 
-    # Create mesh
+    # --- Build mesh & export GLB ---
     mesh = trimesh.Trimesh(
         vertices=verts,
         faces=faces,
@@ -125,14 +143,13 @@ def make_3d_glb(
         process=False
     )
 
-    # Compute vertex normals for better lighting
-    mesh.vertex_normals  # Trigger computation
-    
-    # Export as GLB (binary GLTF format)
-    mesh.export(output_path, file_type='glb')
-    
-    return output_path
+    mesh.export(output_path)
+    print(f"[INFO] Saved 3D GLB model to: {os.path.abspath(output_path)}")
 
+
+# ==============================================================
+# WRAPPER FUNCTIONS FOR API INTEGRATION
+# ==============================================================
 
 def generate_3d_glb_from_image(
     input_image_path,
@@ -142,23 +159,26 @@ def generate_3d_glb_from_image(
     smooth_sigma=1.2
 ):
     """
-    High-level function to generate 3D GLB from image.
+    High-level function to generate 3D GLB from image file.
     
     Args:
         input_image_path: Path to input image
         output_glb_path: Path for output GLB file
-        resize_to: Size for resizing
-        height_scale: Height scale factor
-        smooth_sigma: Smoothing parameter
+        resize_to: Resolution tuple (width, height)
+        height_scale: Height multiplier
+        smooth_sigma: Gaussian smoothing strength
     
     Returns:
         output_glb_path: Path to generated file
     """
-    # Process image
-    combined, gray = make_processed_image(input_image_path, resize_to=resize_to)
+    # Process image (creates overlay + grayscale)
+    combined, gray = make_processed_image(
+        input_image_path,
+        resize_to=resize_to
+    )
     
-    # Generate 3D model
-    result = make_3d_glb(
+    # Generate 3D model with vertex colors
+    make_3d_glb(
         gray,
         combined,
         output_path=output_glb_path,
@@ -167,10 +187,9 @@ def generate_3d_glb_from_image(
         flip_y=True
     )
     
-    return result
+    return output_glb_path
 
 
-# Alternative: Generate from existing arrays
 def generate_3d_glb_from_arrays(
     height_array,
     color_array,
@@ -183,7 +202,7 @@ def generate_3d_glb_from_arrays(
     
     Args:
         height_array: 2D numpy array for heights
-        color_array: 3D numpy array for colors (H x W x 3 or H x W x 4)
+        color_array: 3D numpy array for colors (H x W x 3)
         output_glb_path: Path for output GLB
         height_scale: Height scale factor
         smooth_sigma: Smoothing parameter
@@ -192,10 +211,10 @@ def generate_3d_glb_from_arrays(
         output_glb_path: Path to generated file
     """
     # Ensure proper data types
-    height_array = height_array.astype(np.float32)
-    color_array = color_array.astype(np.uint8)
+    height_array = np.array(height_array).astype(float)
+    color_array = np.array(color_array).astype(np.uint8)
     
-    return make_3d_glb(
+    make_3d_glb(
         height_array,
         color_array,
         output_path=output_glb_path,
@@ -203,3 +222,5 @@ def generate_3d_glb_from_arrays(
         smooth_sigma=smooth_sigma,
         flip_y=True
     )
+    
+    return output_glb_path
