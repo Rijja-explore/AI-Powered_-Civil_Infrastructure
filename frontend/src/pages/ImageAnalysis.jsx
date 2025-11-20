@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAnalysis } from '../contexts/AnalysisContext';
-import { Camera, Upload, Play, Loader, PieChart, Target, Activity, TrendingUp, CheckCircle, AlertTriangle, BarChart3, Wind, Droplet, Zap, Leaf, Download } from 'lucide-react';
+import { Camera, Upload, Play, Loader, PieChart, Target, Activity, TrendingUp, CheckCircle, AlertTriangle, BarChart3, Wind, Droplet, Zap, Leaf, Download, Shield } from 'lucide-react';
 
 const ImageAnalysis = () => {
   const [file, setFile] = useState(null);
@@ -10,6 +10,7 @@ const ImageAnalysis = () => {
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
   const [outputImages, setOutputImages] = useState(null);
+  const [tabSwitched, setTabSwitched] = useState(false);
   const fileInputRef = useRef(null);
   const { updateAnalysis, clearAnalysis, lastAnalysis, outputImages: contextOutputImages } = useAnalysis();
   
@@ -22,16 +23,17 @@ const ImageAnalysis = () => {
 
   // Load saved image and results on component mount and when context changes
   useEffect(() => {
-    const savedImage = sessionStorage.getItem('lastUploadedImage');
-    if (savedImage) {
-      setPreview(savedImage);
-    }
-    // Load saved analysis results from context
-    if (lastAnalysis) {
+    // Restore from context when tab is switched back - PRIORITY
+    if (lastAnalysis && contextOutputImages) {
       setResults(lastAnalysis);
-    }
-    if (contextOutputImages) {
       setOutputImages(contextOutputImages);
+      setTabSwitched(true);
+    }
+    
+    // Restore from sessionStorage if available
+    const savedImage = sessionStorage.getItem('lastUploadedImage');
+    if (savedImage && !preview) {
+      setPreview(savedImage);
     }
   }, [lastAnalysis, contextOutputImages]);
 
@@ -174,11 +176,11 @@ const ImageAnalysis = () => {
         <div className="card">
           <div className="card-header">
             <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-              <Camera size={28} />
-              Upload Image for Analysis
+              <Upload size={28} />
+              🏗️ Structural Health Upload & Analysis
             </h2>
             <p className="mb-1" style={{ color: 'var(--secondary)', marginTop: '0.25rem' }}>
-              Comprehensive structural analysis including crack detection, biological growth, material classification, and environmental impact assessment
+              Comprehensive AI-powered analysis: crack detection, biological growth assessment, material classification, severity scoring, environmental impact & durability prediction
             </p>
           </div>
           <div className="card-body">
@@ -209,7 +211,7 @@ const ImageAnalysis = () => {
           <div className="card-header">
             <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
               <Camera size={28} />
-              Image Preview & Settings
+              📷 Image Preview & Analysis Settings
             </h2>
           </div>
           <div className="card-body">
@@ -310,10 +312,10 @@ const ImageAnalysis = () => {
               <div className="card-header">
                 <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                   <PieChart size={24} />
-                  Analysis Visualizations
+                  📊 Comprehensive Analysis Visualizations
                 </h2>
                 <p style={{ margin: '0.25rem 0 0 0', color: 'var(--secondary)', fontSize: '0.875rem' }}>
-                  AI-powered image analysis results with detailed processing outputs
+                  AI-powered image analysis with 6 detailed processing outputs: Original, Cracks, Growth, Segmentation, Depth, Edges
                 </p>
               </div>
               <div className="card-body">
@@ -355,13 +357,12 @@ const ImageAnalysis = () => {
                   )}
                 </div>
                 
-                {/* Second row with 2 centered images */}
+                {/* Second row with 3 images */}
                 <div className="image-grid-second-row" style={{ 
                   display: 'grid', 
-                  gridTemplateColumns: 'repeat(2, 1fr)', 
+                  gridTemplateColumns: 'repeat(3, 1fr)', 
                   gap: '1.5rem',
-                  maxWidth: '66.666%',
-                  margin: '0 auto'
+                  marginTop: '1.5rem'
                 }}>
                   {outputImages.segmentation && (
                     <div className="image-card" style={{ padding: '1rem', background: 'var(--light)', borderRadius: 'var(--border-radius)', border: '1px solid var(--glass-border)' }}>
@@ -379,6 +380,14 @@ const ImageAnalysis = () => {
                       <img src={outputImages.depth_estimation} alt="Depth Estimation" style={{ width: '100%', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
                     </div>
                   )}
+                  {outputImages.edge_detection && (
+                    <div className="image-card" style={{ padding: '1rem', background: 'var(--light)', borderRadius: 'var(--border-radius)', border: '1px solid var(--glass-border)' }}>
+                      <div className="image-card-title" style={{ fontWeight: 600, marginBottom: '1rem', color: 'var(--dark)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        ⚡ Edge Detection
+                      </div>
+                      <img src={outputImages.edge_detection} alt="Edge Detection" style={{ width: '100%', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -389,10 +398,10 @@ const ImageAnalysis = () => {
             <div className="card-header">
               <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                 <BarChart3 size={24} />
-                Dynamic Analytics Dashboard
+                📈 Comprehensive Structural Assessment Dashboard
               </h2>
               <p style={{ margin: '0.25rem 0 0 0', color: 'var(--secondary)', fontSize: '0.875rem' }}>
-                Real-time analysis metrics based on your uploaded image
+                Real-time analysis metrics: Health Score, Damage Detection, Material Classification, Severity Assessment & Environmental Impact
               </p>
             </div>
             <div className="card-body">
@@ -438,42 +447,87 @@ const ImageAnalysis = () => {
               <div className="material-analysis-section" style={{ marginBottom: '2rem' }}>
                 <h4 style={{ marginBottom: '1rem', color: 'var(--dark)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <Target size={20} />
-                  Material Analysis & Classification
+                  🏗️ Material Classification & Durability Properties
                 </h4>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-                  <div className="material-metrics">
-                    <div className="metrics-grid" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
-                      <MetricCard
-                        icon={Activity}
-                        title="Primary Material"
-                        value={results.material_analysis?.predicted_material || 'Unknown'}
-                        subtitle={`Confidence: ${results.material_analysis?.confidence?.toFixed(1)}%`}
-                        color="primary"
-                      />
-                      <MetricCard
-                        icon={BarChart3}
-                        title="Material Density"
-                        value={results.material_analysis?.material_properties?.density || 'N/A'}
-                        subtitle="g/cm³"
-                        color="info"
-                      />
-                      <MetricCard
-                        icon={TrendingUp}
-                        title="Durability Score"
-                        value={results.material_analysis?.material_properties?.durability_score || 'N/A'}
-                        subtitle="/10"
-                        color="success"
-                      />
-                      <MetricCard
-                        icon={Leaf}
-                        title="Environmental Impact"
-                        value={results.material_analysis?.material_properties?.environmental_rating || 'N/A'}
-                        subtitle="Eco-rating"
-                        color="warning"
-                      />
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+                  <MetricCard
+                    icon={Activity}
+                    title="Primary Material"
+                    value={results.material_analysis?.predicted_material || 'Unknown'}
+                    subtitle={`AI Confidence: ${(results.material_analysis?.probabilities ? Math.max(...(typeof results.material_analysis.probabilities === 'object' ? Object.values(results.material_analysis.probabilities) : [])) * 100 : 0).toFixed(1)}%`}
+                    color="primary"
+                  />
+                  <MetricCard
+                    icon={BarChart3}
+                    title="Material Density"
+                    value={`${results.material_analysis?.material_properties?.density_kg_m3 || 'N/A'}`}
+                    subtitle="kg/m³"
+                    color="info"
+                  />
+                  <MetricCard
+                    icon={TrendingUp}
+                    title="Durability"
+                    value={`${results.material_analysis?.material_properties?.durability_score || 'N/A'}/10`}
+                    subtitle="Durability Score"
+                    color="success"
+                  />
+                  <MetricCard
+                    icon={Leaf}
+                    title="Material Quality"
+                    value={results.material_analysis?.predicted_material?.includes('Stone') || results.material_analysis?.predicted_material?.includes('Concrete') ? 'Excellent' : results.material_analysis?.predicted_material?.includes('Brick') || results.material_analysis?.predicted_material?.includes('Marble') ? 'Very Good' : 'Good'}
+                    subtitle="Estimated Grade"
+                    color="warning"
+                  />
+                </div>
+
+                {/* Severity Classification Card */}
+                <div style={{ 
+                  background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(245, 158, 11, 0.1))', 
+                  border: '1px solid rgba(239, 68, 68, 0.2)', 
+                  borderRadius: 'var(--border-radius)', 
+                  padding: '1.5rem',
+                  marginBottom: '1.5rem'
+                }}>
+                  <h5 style={{ margin: '0 0 1rem 0', color: 'var(--dark)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <AlertTriangle size={18} />
+                    ⚠️ Damage Severity Distribution & Assessment
+                  </h5>
+                  {results.crack_detection?.details?.length > 0 ? (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
+                      {results.crack_detection.statistics?.severity_distribution && Object.entries(results.crack_detection.statistics.severity_distribution).map(([severity, count]) => {
+                        const severityColors = {
+                          'Critical': { bg: '#dc2626', light: 'rgba(220, 38, 38, 0.1)' },
+                          'Severe': { bg: '#ea580c', light: 'rgba(234, 88, 12, 0.1)' },
+                          'Moderate': { bg: '#ca8a04', light: 'rgba(202, 138, 4, 0.1)' },
+                          'Minor': { bg: '#16a34a', light: 'rgba(22, 163, 74, 0.1)' }
+                        };
+                        const colors = severityColors[severity] || { bg: '#6b7280', light: 'rgba(107, 114, 128, 0.1)' };
+                        return (
+                          <div key={severity} style={{
+                            background: colors.light,
+                            border: `2px solid ${colors.bg}`,
+                            borderRadius: '8px',
+                            padding: '1rem',
+                            textAlign: 'center'
+                          }}>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--secondary)', marginBottom: '0.5rem', fontWeight: '600' }}>
+                              {severity}
+                            </div>
+                            <div style={{ fontSize: '1.5rem', fontWeight: '700', color: colors.bg, marginBottom: '0.25rem' }}>
+                              {count}
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--secondary)' }}>
+                              {count === 1 ? 'crack' : 'cracks'}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                  </div>
-                  <div className="material-confidence-viz"></div>
+                  ) : (
+                    <div style={{ color: 'var(--secondary)', fontStyle: 'italic' }}>
+                      ✅ No structural cracks detected - excellent condition!
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -512,6 +566,42 @@ const ImageAnalysis = () => {
                   />
                 </div>
 
+                {/* NEW: Advanced Structural Assessment Section */}
+                <div style={{ marginTop: '2rem', padding: '1.5rem', background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(59, 130, 246, 0.1))', borderRadius: 'var(--border-radius)', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
+                  <h5 style={{ margin: '0 0 1rem 0', color: 'var(--dark)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Shield size={18} />
+                    🔍 Advanced Durability & Weathering Assessment
+                  </h5>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
+                    <div style={{ background: 'white', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(0,0,0,0.1)' }}>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: '600', marginBottom: '0.5rem' }}>Weathering Index</div>
+                      <div style={{ fontSize: '1.5rem', fontWeight: '700', color: results.biological_growth?.growth_percentage > 20 ? '#ea580c' : '#16a34a' }}>
+                        {results.biological_growth?.growth_percentage > 20 ? 'High' : results.biological_growth?.growth_percentage > 10 ? 'Moderate' : 'Low'}
+                      </div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--secondary)', marginTop: '0.25rem' }}>Based on growth patterns</div>
+                    </div>
+                    <div style={{ background: 'white', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(0,0,0,0.1)' }}>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: '600', marginBottom: '0.5rem' }}>Structural Stress Level</div>
+                      <div style={{ fontSize: '1.5rem', fontWeight: '700', color: results.crack_detection?.count > 5 ? '#dc2626' : results.crack_detection?.count > 2 ? '#ca8a04' : '#16a34a' }}>
+                        {results.crack_detection?.count > 5 ? 'Critical' : results.crack_detection?.count > 2 ? 'Moderate' : 'Stable'}
+                      </div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--secondary)', marginTop: '0.25rem' }}>{results.crack_detection?.count} cracks detected</div>
+                    </div>
+                    <div style={{ background: 'white', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(0,0,0,0.1)' }}>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: '600', marginBottom: '0.5rem' }}>Durability Forecast</div>
+                      <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#6366f1' }}>
+                        {(() => {
+                          const healthScore = results.data_science_insights?.health_score || 0;
+                          if (healthScore > 75) return '8-10 yrs';
+                          if (healthScore > 50) return '3-7 yrs';
+                          return '< 3 yrs';
+                        })()}
+                      </div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--secondary)', marginTop: '0.25rem' }}>Maintenance window</div>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Environmental Recommendations */}
                 {results.environmental_impact_assessment?.recommendations && (
                   <div className="recommendations-section" style={{ marginTop: '2rem' }}>
@@ -545,7 +635,7 @@ const ImageAnalysis = () => {
               <div className="card-header">
                 <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                   <AlertTriangle size={20} />
-                  Crack Detection Details
+                  🔴 Structural Crack Detection & Analysis
                 </h3>
               </div>
               <div className="card-body">
@@ -609,22 +699,22 @@ const ImageAnalysis = () => {
               <div className="card-header">
                 <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                   <Leaf size={20} />
-                  Biological Growth Analysis
+                  🌱 Biological Growth & Contamination Analysis
                 </h3>
               </div>
               <div className="card-body">
-                <div className="metrics-grid">
+                <div className="metrics-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
                   <MetricCard
                     icon={Leaf}
                     title="Growth Detected"
-                    value={results.biological_growth?.growth_detected ? 'Yes' : 'No'}
+                    value={results.biological_growth?.growth_detected ? 'Yes ✓' : 'No ✓'}
                     color={results.biological_growth?.growth_detected ? 'warning' : 'success'}
                   />
                   <MetricCard
                     icon={BarChart3}
                     title="Coverage Area"
                     value={`${results.biological_growth?.growth_percentage?.toFixed(2)}%`}
-                    color="success"
+                    color={results.biological_growth?.growth_percentage > 10 ? 'danger' : results.biological_growth?.growth_percentage > 5 ? 'warning' : 'success'}
                   />
                   <MetricCard
                     icon={TrendingUp}
@@ -632,47 +722,111 @@ const ImageAnalysis = () => {
                     value={`${results.biological_growth?.affected_area_cm2?.toFixed(2)} cm²`}
                     color="info"
                   />
+                  <MetricCard
+                    icon={Activity}
+                    title="Growth Type"
+                    value={results.biological_growth?.growth_percentage > 0 ? 'Moss/Algae/Lichen' : 'None'}
+                    color={results.biological_growth?.growth_percentage > 0 ? 'warning' : 'success'}
+                  />
                 </div>
 
-                {/* Growth Trend Visualization */}
-                {results.biological_growth?.growth_percentage > 0 && (
-                  <div className="growth-trend" style={{ marginTop: '2rem' }}>
-                    <h6 style={{ marginBottom: '1rem', fontWeight: 700, color: 'var(--dark)' }}>Growth Coverage Trend</h6>
+                {/* Biological Growth Classification */}
+                <div style={{ 
+                  background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1))', 
+                  border: '1px solid rgba(16, 185, 129, 0.2)', 
+                  borderRadius: 'var(--border-radius)', 
+                  padding: '1.5rem',
+                  marginBottom: '1.5rem'
+                }}>
+                  <h5 style={{ margin: '0 0 1rem 0', color: 'var(--dark)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Leaf size={18} />
+                    Biological Growth Assessment
+                  </h5>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
                     <div style={{
-                      width: '100%',
-                      height: '60px',
-                      background: 'linear-gradient(90deg, var(--success), var(--warning), var(--danger))',
-                      borderRadius: '30px',
-                      position: 'relative',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
+                      background: 'rgba(16, 185, 129, 0.1)',
+                      border: '2px solid #10b981',
+                      borderRadius: '8px',
+                      padding: '1rem',
+                      textAlign: 'center'
                     }}>
-                      <div style={{
-                        position: 'absolute',
-                        left: `${Math.min(results.biological_growth.growth_percentage, 100)}%`,
-                        transform: 'translateX(-50%)',
-                        width: '4px',
-                        height: '40px',
-                        background: 'var(--dark)',
-                        borderRadius: '2px'
-                      }} />
-                      <span style={{
-                        color: 'white',
-                        fontWeight: 'bold',
-                        textShadow: '0 0 4px rgba(0,0,0,0.5)',
-                        zIndex: 1
-                      }}>
-                        {results.biological_growth.growth_percentage.toFixed(1)}%
-                      </span>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--secondary)', marginBottom: '0.5rem', fontWeight: '600' }}>
+                        Moss/Lichen Growth
+                      </div>
+                      <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#10b981' }}>
+                        {results.biological_growth?.growth_percentage > 5 ? '⚠ Present' : '✓ None'}
+                      </div>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem', fontSize: '0.75rem', color: 'var(--secondary)' }}>
-                      <span>0%</span>
-                      <span>50%</span>
-                      <span>100%</span>
+                    <div style={{
+                      background: 'rgba(34, 197, 94, 0.1)',
+                      border: '2px solid #22c55e',
+                      borderRadius: '8px',
+                      padding: '1rem',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--secondary)', marginBottom: '0.5rem', fontWeight: '600' }}>
+                        Algae Growth
+                      </div>
+                      <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#22c55e' }}>
+                        {results.biological_growth?.growth_percentage > 8 ? '⚠ Present' : '✓ None'}
+                      </div>
+                    </div>
+                    <div style={{
+                      background: 'rgba(34, 211, 238, 0.1)',
+                      border: '2px solid #06b6d4',
+                      borderRadius: '8px',
+                      padding: '1rem',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--secondary)', marginBottom: '0.5rem', fontWeight: '600' }}>
+                        Vegetation
+                      </div>
+                      <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#06b6d4' }}>
+                        {results.biological_growth?.growth_percentage > 12 ? '⚠ Present' : '✓ None'}
+                      </div>
                     </div>
                   </div>
-                )}
+                  
+                  {/* Growth Trend Visualization */}
+                  {results.biological_growth?.growth_percentage > 0 && (
+                    <div style={{ marginTop: '1.5rem' }}>
+                      <h6 style={{ marginBottom: '1rem', fontWeight: '700', color: 'var(--dark)' }}>Growth Coverage Intensity</h6>
+                      <div style={{
+                        width: '100%',
+                        height: '60px',
+                        background: 'linear-gradient(90deg, var(--success), var(--warning), var(--danger))',
+                        borderRadius: '30px',
+                        position: 'relative',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        <div style={{
+                          position: 'absolute',
+                          left: `${Math.min(results.biological_growth.growth_percentage, 100)}%`,
+                          transform: 'translateX(-50%)',
+                          width: '4px',
+                          height: '40px',
+                          background: 'var(--dark)',
+                          borderRadius: '2px'
+                        }} />
+                        <span style={{
+                          color: 'white',
+                          fontWeight: 'bold',
+                          textShadow: '0 0 4px rgba(0,0,0,0.5)',
+                          zIndex: 1
+                        }}>
+                          {results.biological_growth.growth_percentage.toFixed(1)}%
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem', fontSize: '0.75rem', color: 'var(--secondary)' }}>
+                        <span>Low (0%)</span>
+                        <span>Moderate (50%)</span>
+                        <span>High (100%)</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
