@@ -319,81 +319,126 @@ const ImageAnalysis = () => {
                 </p>
               </div>
               <div className="card-body">
-                <div className="image-grid" style={{ 
+                {/* UNIFIED 3x3 IMAGE GRID - ALL 9 IMAGES SAME FORMAT */}
+                <div className="image-grid-unified" style={{ 
                   display: 'grid', 
                   gridTemplateColumns: 'repeat(3, 1fr)', 
-                  gap: '1.5rem',
-                  marginBottom: '1.5rem'
+                  gap: '1.5rem'
                 }}>
-                  {outputImages.original && (
-                    <div className="image-card" style={{ padding: '1rem', background: 'var(--light)', borderRadius: 'var(--border-radius)', border: '1px solid var(--glass-border)' }}>
-                      <div className="image-card-title" style={{ fontWeight: 600, marginBottom: '1rem', color: 'var(--dark)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        📸 Original Image
-                      </div>
-                      <img src={outputImages.original} alt="Original" style={{ width: '100%', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                  {/* ROW 1: Original 3 Images */}
+                  <div className="image-card" style={{ padding: '1rem', background: 'var(--light)', borderRadius: 'var(--border-radius)', border: '1px solid var(--glass-border)' }}>
+                    <div className="image-card-title" style={{ fontWeight: 600, marginBottom: '1rem', color: 'var(--dark)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      📸 Original Image
                     </div>
-                  )}
-                  {outputImages.crack_detection && (
-                    <div className="image-card" style={{ padding: '1rem', background: 'var(--light)', borderRadius: 'var(--border-radius)', border: '1px solid var(--glass-border)' }}>
-                      <div className="image-card-title" style={{ fontWeight: 600, marginBottom: '1rem', color: 'var(--dark)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        🔍 Crack Detection
-                        <span style={{ fontSize: '0.875rem', color: 'var(--secondary)', fontWeight: 'normal' }}>
-                          ({results.crack_detection?.count || 0} detected)
-                        </span>
-                      </div>
-                      <img src={outputImages.crack_detection} alt="Crack Detection" style={{ width: '100%', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                    {outputImages?.original ? (
+                      <img src={outputImages.original} alt="Original" style={{ width: '100%', height: '300px', objectFit: 'cover', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                    ) : (
+                      <div style={{ width: '100%', height: '300px', background: '#f0f0f0', borderRadius: 'var(--border-radius)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999' }}>No image</div>
+                    )}
+                  </div>
+
+                  <div className="image-card" style={{ padding: '1rem', background: 'var(--light)', borderRadius: 'var(--border-radius)', border: '1px solid var(--glass-border)' }}>
+                    <div className="image-card-title" style={{ fontWeight: 600, marginBottom: '1rem', color: 'var(--dark)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      🔍 Crack Detection
+                      <span style={{ fontSize: '0.875rem', color: 'var(--secondary)', fontWeight: 'normal' }}>
+                        ({results?.crack_detection?.count || 0})
+                      </span>
                     </div>
-                  )}
-                  {outputImages.biological_growth && (
-                    <div className="image-card" style={{ padding: '1rem', background: 'var(--light)', borderRadius: 'var(--border-radius)', border: '1px solid var(--glass-border)' }}>
-                      <div className="image-card-title" style={{ fontWeight: 600, marginBottom: '1rem', color: 'var(--dark)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        🌿 Biological Growth
-                        <span style={{ fontSize: '0.875rem', color: 'var(--secondary)', fontWeight: 'normal' }}>
-                          ({results.biological_growth?.growth_percentage?.toFixed(1)}% coverage)
-                        </span>
-                      </div>
-                      <img src={outputImages.biological_growth} alt="Biological Growth" style={{ width: '100%', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                    {outputImages?.crack_detection ? (
+                      <img src={outputImages.crack_detection} alt="Crack Detection" style={{ width: '100%', height: '300px', objectFit: 'cover', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                    ) : (
+                      <div style={{ width: '100%', height: '300px', background: '#f0f0f0', borderRadius: 'var(--border-radius)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999' }}>No image</div>
+                    )}
+                  </div>
+
+                  <div className="image-card" style={{ padding: '1rem', background: 'var(--light)', borderRadius: 'var(--border-radius)', border: '1px solid var(--glass-border)' }}>
+                    <div className="image-card-title" style={{ fontWeight: 600, marginBottom: '1rem', color: 'var(--dark)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      🌿 Biological Growth
+                      <span style={{ fontSize: '0.875rem', color: 'var(--secondary)', fontWeight: 'normal' }}>
+                        ({results?.biological_growth?.growth_percentage?.toFixed(1) || 0}%)
+                      </span>
                     </div>
-                  )}
-                </div>
-                
-                {/* Second row with 3 images */}
-                <div className="image-grid-second-row" style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: 'repeat(3, 1fr)', 
-                  gap: '1.5rem',
-                  marginTop: '1.5rem'
-                }}>
-                  {outputImages.segmentation && (
-                    <div className="image-card" style={{ padding: '1rem', background: 'var(--light)', borderRadius: 'var(--border-radius)', border: '1px solid var(--glass-border)' }}>
-                      <div className="image-card-title" style={{ fontWeight: 600, marginBottom: '1rem', color: 'var(--dark)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        🎯 AI Segmentation
-                      </div>
-                      <img src={outputImages.segmentation} alt="Segmentation" style={{ width: '100%', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                    {outputImages?.biological_growth ? (
+                      <img src={outputImages.biological_growth} alt="Biological Growth" style={{ width: '100%', height: '300px', objectFit: 'cover', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                    ) : (
+                      <div style={{ width: '100%', height: '300px', background: '#f0f0f0', borderRadius: 'var(--border-radius)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999' }}>No image</div>
+                    )}
+                  </div>
+
+                  {/* ROW 2: Original 3 Images */}
+                  <div className="image-card" style={{ padding: '1rem', background: 'var(--light)', borderRadius: 'var(--border-radius)', border: '1px solid var(--glass-border)' }}>
+                    <div className="image-card-title" style={{ fontWeight: 600, marginBottom: '1rem', color: 'var(--dark)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      🎯 AI Segmentation
                     </div>
-                  )}
-                  {outputImages.depth_estimation && (
-                    <div className="image-card" style={{ padding: '1rem', background: 'var(--light)', borderRadius: 'var(--border-radius)', border: '1px solid var(--glass-border)' }}>
-                      <div className="image-card-title" style={{ fontWeight: 600, marginBottom: '1rem', color: 'var(--dark)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        📊 Depth Analysis
-                      </div>
-                      <img src={outputImages.depth_estimation} alt="Depth Estimation" style={{ width: '100%', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                    {outputImages?.segmentation ? (
+                      <img src={outputImages.segmentation} alt="Segmentation" style={{ width: '100%', height: '300px', objectFit: 'cover', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                    ) : (
+                      <div style={{ width: '100%', height: '300px', background: '#f0f0f0', borderRadius: 'var(--border-radius)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999' }}>Processing...</div>
+                    )}
+                  </div>
+
+                  <div className="image-card" style={{ padding: '1rem', background: 'var(--light)', borderRadius: 'var(--border-radius)', border: '1px solid var(--glass-border)' }}>
+                    <div className="image-card-title" style={{ fontWeight: 600, marginBottom: '1rem', color: 'var(--dark)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      📊 Depth Analysis
                     </div>
-                  )}
-                  {outputImages.edge_detection && (
-                    <div className="image-card" style={{ padding: '1rem', background: 'var(--light)', borderRadius: 'var(--border-radius)', border: '1px solid var(--glass-border)' }}>
-                      <div className="image-card-title" style={{ fontWeight: 600, marginBottom: '1rem', color: 'var(--dark)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        ⚡ Edge Detection
-                      </div>
-                      <img src={outputImages.edge_detection} alt="Edge Detection" style={{ width: '100%', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                    {outputImages?.depth_estimation ? (
+                      <img src={outputImages.depth_estimation} alt="Depth Estimation" style={{ width: '100%', height: '300px', objectFit: 'cover', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                    ) : (
+                      <div style={{ width: '100%', height: '300px', background: '#f0f0f0', borderRadius: 'var(--border-radius)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999' }}>Processing...</div>
+                    )}
+                  </div>
+
+                  <div className="image-card" style={{ padding: '1rem', background: 'var(--light)', borderRadius: 'var(--border-radius)', border: '1px solid var(--glass-border)' }}>
+                    <div className="image-card-title" style={{ fontWeight: 600, marginBottom: '1rem', color: 'var(--dark)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      ⚡ Edge Detection
                     </div>
-                  )}
+                    {outputImages?.edge_detection ? (
+                      <img src={outputImages.edge_detection} alt="Edge Detection" style={{ width: '100%', height: '300px', objectFit: 'cover', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                    ) : (
+                      <div style={{ width: '100%', height: '300px', background: '#f0f0f0', borderRadius: 'var(--border-radius)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999' }}>Processing...</div>
+                    )}
+                  </div>
+
+                  {/* ROW 3: NEW Advanced Analysis - SAME FORMAT as others */}
+                  <div className="image-card" style={{ padding: '1rem', background: 'var(--light)', borderRadius: 'var(--border-radius)', border: '1px solid var(--glass-border)' }}>
+                    <div className="image-card-title" style={{ fontWeight: 600, marginBottom: '1rem', color: 'var(--dark)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      💧 Moisture/Dampness Heatmap
+                      <span style={{ fontSize: '0.65rem', color: '#3b82f6', fontWeight: 'bold', background: 'rgba(59, 130, 246, 0.2)', padding: '0.25rem 0.4rem', borderRadius: '3px' }}>NEW</span>
+                    </div>
+                    {outputImages?.moisture_dampness_heatmap ? (
+                      <img src={outputImages.moisture_dampness_heatmap} alt="Moisture Heatmap" style={{ width: '100%', height: '300px', objectFit: 'cover', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                    ) : (
+                      <div style={{ width: '100%', height: '300px', background: '#f0f0f0', borderRadius: 'var(--border-radius)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999' }}>Processing...</div>
+                    )}
+                  </div>
+
+                  <div className="image-card" style={{ padding: '1rem', background: 'var(--light)', borderRadius: 'var(--border-radius)', border: '1px solid var(--glass-border)' }}>
+                    <div className="image-card-title" style={{ fontWeight: 600, marginBottom: '1rem', color: 'var(--dark)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      🔴 Structural Stress Map
+                      <span style={{ fontSize: '0.65rem', color: '#dc2626', fontWeight: 'bold', background: 'rgba(220, 38, 38, 0.2)', padding: '0.25rem 0.4rem', borderRadius: '3px' }}>NEW</span>
+                    </div>
+                    {outputImages?.structural_stress_map ? (
+                      <img src={outputImages.structural_stress_map} alt="Stress Map" style={{ width: '100%', height: '300px', objectFit: 'cover', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                    ) : (
+                      <div style={{ width: '100%', height: '300px', background: '#f0f0f0', borderRadius: 'var(--border-radius)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999' }}>Processing...</div>
+                    )}
+                  </div>
+
+                  <div className="image-card" style={{ padding: '1rem', background: 'var(--light)', borderRadius: 'var(--border-radius)', border: '1px solid var(--glass-border)' }}>
+                    <div className="image-card-title" style={{ fontWeight: 600, marginBottom: '1rem', color: 'var(--dark)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      🔥 Thermal/Infrared Simulation
+                      <span style={{ fontSize: '0.65rem', color: '#f97316', fontWeight: 'bold', background: 'rgba(249, 115, 22, 0.2)', padding: '0.25rem 0.4rem', borderRadius: '3px' }}>NEW</span>
+                    </div>
+                    {outputImages?.thermal_infrared_simulation ? (
+                      <img src={outputImages.thermal_infrared_simulation} alt="Thermal Map" style={{ width: '100%', height: '300px', objectFit: 'cover', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                    ) : (
+                      <div style={{ width: '100%', height: '300px', background: '#f0f0f0', borderRadius: 'var(--border-radius)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999' }}>Processing...</div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
           )}
-
-          {/* Dynamic Analytics Dashboard */}
           <div className="card" style={{ marginBottom: '2rem' }}>
             <div className="card-header">
               <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.6rem' }}>

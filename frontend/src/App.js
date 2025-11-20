@@ -38,7 +38,7 @@ function App() {
   const routes = [
     { id: 'image-analysis', label: 'Image Analysis', Icon: Camera, Component: ImageAnalysis, description: 'AI-powered crack detection & material analysis' },
     { id: 'video-analysis', label: 'Video Analysis', Icon: Video, Component: VideoAnalysis, description: 'Real-time video monitoring & processing' },
-    { id: 'analytics', label: 'Analytics', Icon: BarChart3, Component: Analytics, description: 'Comprehensive data insights & statistics' },
+    { id: 'analytics', label: 'Quick Analytics', Icon: BarChart3, Component: Analytics, description: 'Quick project insights & statistics' },
     { id: 'about', label: 'About', Icon: Shield, Component: About, description: 'About our technology & methodology' }
   ];
 

@@ -34,7 +34,7 @@ class UnifiedDataScienceAnalyzer:
         """
         UNIFIED: Comprehensive data science process combining all three modules
         """
-        print("🔬 Starting Unified Data Science Analysis...")
+        print("[*] Starting Unified Data Science Analysis...")
         
         # Step 1: Data Integration
         integrated_data = self.integrate_all_data(crack_data, material_data, environmental_data, image_metrics)
@@ -152,7 +152,7 @@ class UnifiedDataScienceAnalyzer:
                 IQR = Q3 - Q1
                 df[col] = df[col].clip(Q1 - 1.5 * IQR, Q3 + 1.5 * IQR)
         
-        print("✅ Data cleansing complete")
+        print("[OK] Data cleansing complete")
         return df
     
     def exploratory_analysis(self, df):
@@ -163,7 +163,7 @@ class UnifiedDataScienceAnalyzer:
             'distribution_analysis': self._distribution_analysis(df),
             'correlation_analysis': self._correlation_analysis(df)
         }
-        print("✅ EDA complete")
+        print("[OK] EDA complete")
         return results
     
     def _frequency_analysis(self, df):
@@ -262,7 +262,7 @@ class UnifiedDataScienceAnalyzer:
                         }
                     }
         
-        print("✅ Inferential statistics complete")
+        print("[OK] Inferential statistics complete")
         return results
     
     def anova_analysis(self, df):
@@ -285,7 +285,7 @@ class UnifiedDataScienceAnalyzer:
                             'significant': bool(p_value < 0.05)
                         }
         
-        print("✅ ANOVA analysis complete")
+        print("[OK] ANOVA analysis complete")
         return results
     
     def predictive_analytics(self, df):
@@ -323,7 +323,7 @@ class UnifiedDataScienceAnalyzer:
                     'forecast_next_3': [float(slope * i + intercept) for i in range(len(x)+1, len(x)+4)]
                 }
         
-        print("✅ Predictive analytics complete")
+        print("[OK] Predictive analytics complete")
         return results
     
     def assess_data_quality(self, df):
@@ -393,7 +393,7 @@ class AdvancedImageAnalyzer:
             # Blend with original for context
             result = cv2.addWeighted(image_np, 0.4, moisture_heatmap, 0.6, 0)
             
-            print("✅ Moisture heatmap generated successfully")
+            print("[OK] Moisture heatmap generated successfully")
             return result
         
         except Exception as e:
@@ -444,7 +444,7 @@ class AdvancedImageAnalyzer:
             # Blend with original
             result = cv2.addWeighted(image_np, 0.3, stress_heatmap, 0.7, 0)
             
-            print("✅ Structural stress map generated successfully")
+            print("[OK] Structural stress map generated successfully")
             return result
         
         except Exception as e:
@@ -500,7 +500,7 @@ class AdvancedImageAnalyzer:
             thermal_blend = cv2.addWeighted(thermal_visualization, 0.7, high_temp_colored, 0.3, 0)
             result = cv2.addWeighted(image_np, 0.25, thermal_blend, 0.75, 0)
             
-            print("✅ Thermal/Infrared simulation generated successfully")
+            print("[OK] Thermal/Infrared simulation generated successfully")
             return result
         
         except Exception as e:
@@ -516,7 +516,7 @@ class AdvancedImageAnalyzer:
             print("🔍 Verifying Segmentation Connection...")
             
             if segmentation_model is None:
-                print("⚠️ Segmentation model is None - creating fallback")
+                print("[!] Segmentation model is None - creating fallback")
                 return False, None
             
             # Test segmentation
@@ -524,7 +524,7 @@ class AdvancedImageAnalyzer:
             results = segmentation_model.predict(source=image_rgb, conf=0.3, save=False)
             
             if results and len(results) > 0 and results[0] is not None:
-                print("✅ Segmentation model is properly connected")
+                print("[OK] Segmentation model is properly connected")
                 segmented_image = results[0].plot()
                 
                 if not isinstance(segmented_image, np.ndarray):
@@ -537,7 +537,7 @@ class AdvancedImageAnalyzer:
                 
                 return True, segmented_image
             else:
-                print("⚠️ Segmentation returned no results")
+                print("[!] Segmentation returned no results")
                 return False, None
         
         except Exception as e:
@@ -585,7 +585,7 @@ def create_unified_analysis_report(image_np, crack_data, material_data, environm
         stress_map = image_analyzer.create_structural_stress_map(image_np, crack_details)
         thermal_simulation = image_analyzer.create_thermal_infrared_simulation(image_np)
         
-        print("\n✅ UNIFIED ANALYSIS COMPLETE!")
+        print("\n[OK] UNIFIED ANALYSIS COMPLETE!")
         print("="*60)
         
         return {
@@ -615,6 +615,6 @@ def create_unified_analysis_report(image_np, crack_data, material_data, environm
 if __name__ == "__main__":
     print("🧪 Testing Unified Analysis Engine...")
     print("This module provides:")
-    print("  ✅ Combined Data Science Analysis (3 modules integrated)")
-    print("  ✅ 9 Output Images (6 original + 3 advanced)")
-    print("  ✅ Advanced Structural Health Monitoring")
+    print("  [OK] Combined Data Science Analysis (3 modules integrated)")
+    print("  [OK] 9 Output Images (6 original + 3 advanced)")
+    print("  [OK] Advanced Structural Health Monitoring")
