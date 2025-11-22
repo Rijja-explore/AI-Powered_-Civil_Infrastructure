@@ -12,18 +12,22 @@ export const useAnalysis = () => {
 
 export const AnalysisProvider = ({ children }) => {
   const [lastAnalysis, setLastAnalysis] = useState(null);
+  const [outputImages, setOutputImages] = useState(null);
 
-  const updateAnalysis = (analysisData) => {
+  const updateAnalysis = (analysisData, images) => {
     setLastAnalysis(analysisData);
+    setOutputImages(images);
   };
 
   const clearAnalysis = () => {
     setLastAnalysis(null);
+    setOutputImages(null);
   };
 
   return (
     <AnalysisContext.Provider value={{
       lastAnalysis,
+      outputImages,
       updateAnalysis,
       clearAnalysis
     }}>

@@ -4,6 +4,7 @@ import './styles/main.css';
 
 // Import pages
 import ImageAnalysis from './pages/ImageAnalysis';
+import ImageInsights from './pages/ImageInsights';
 import VideoAnalysis from './pages/VideoAnalysis';
 import RealTimeMonitoring from './pages/RealTimeMonitoring';
 import Analytics from './pages/Analytics';
@@ -13,7 +14,7 @@ import { AnalysisProvider } from './contexts/AnalysisContext';
   
 
 function App() {
-  const [activeTab, setActiveTab] = useState('video-analysis');
+  const [activeTab, setActiveTab] = useState('image-analysis');
   const [systemStatus, setSystemStatus] = useState({
     backendConnected: false,
     lastAnalysis: null,
@@ -38,6 +39,7 @@ function App() {
 
   const routes = [
     { id: 'image-analysis', label: 'Image Analysis', Icon: Camera, Component: ImageAnalysis, description: 'AI-powered crack detection & material analysis' },
+    { id: 'image-insights', label: 'Image Insights', Icon: Activity, Component: ImageInsights, description: 'Deep analytics for the last analyzed image' },
     { id: 'video-analysis', label: 'Video Analysis', Icon: Video, Component: VideoAnalysis, description: 'Real-time video monitoring & processing' },
     { id: '3d-heightmap', label: '3D Heightmap', Icon: Box, Component: Heightmap3D, description: 'Convert 2D images to 3D heightmaps' },
     { id: 'analytics', label: 'Quick Analytics', Icon: BarChart3, Component: Analytics, description: 'Quick project insights & statistics' },

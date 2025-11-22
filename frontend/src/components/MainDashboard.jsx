@@ -1,13 +1,13 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Camera, Upload, Activity, BarChart3, Leaf, AlertTriangle, Download, Settings, Play, Video, Wifi, TrendingUp, Droplet, Wind, Zap, CheckCircle, XCircle, Loader } from 'lucide-react';
-
-// Import all the component code and styles from your provided code
-// This is just the basic structure - you'll need to add all the styles and functionality
+import ImageAnalysis from '../pages/ImageAnalysis';
+import ImageInsights from '../pages/ImageInsights';
 
 const MainDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('image-analysis');
+  const [lastAnalysis, setLastAnalysis] = useState(null);
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -29,12 +29,22 @@ const MainDashboard = () => {
     navigate(`/${tab}`);
   };
 
-  // Add all the handlers and components from your code here
-  // handleFileChange, handleAnalyze, handleDownloadPDF, MetricCard, SeverityBadge
-
   return (
     <div className="dashboard-container">
-      {/* Add all your JSX from the provided code */}
+      <div className="tab-navigation">
+        <button onClick={() => handleTabChange('image-analysis')}>Image Analysis</button>
+        <button onClick={() => handleTabChange('image-insights')}>Image Insights</button>
+      </div>
+
+      <div className="tab-content">
+        {activeTab === 'image-analysis' && (
+          <ImageAnalysis
+            lastAnalysis={lastAnalysis}
+            onAnalysisComplete={setLastAnalysis}
+          />
+        )}
+        {activeTab === 'image-insights' && <ImageInsights lastAnalysis={lastAnalysis} />}
+      </div>
     </div>
   );
 };

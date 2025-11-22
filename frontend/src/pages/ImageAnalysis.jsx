@@ -164,6 +164,37 @@ const ImageAnalysis = () => {
     return <span className={`badge bg-${colors[severity] || 'secondary'}`}>{severity}</span>;
   };
 
+  const ImageInsights = ({ lastAnalysis }) => {
+    if (!lastAnalysis) {
+      return (
+        <div className="content-area">
+          <div className="alert alert-warning">
+            No analysis data available. Please analyze an image first.
+          </div>
+        </div>
+      );
+    }
+
+    const { images, metrics } = lastAnalysis;
+
+    return (
+      <div className="content-area">
+        <h2>Image Insights</h2>
+        <div className="image-grid">
+          {images.map((image, index) => (
+            <div key={index} className="image-card">
+              <img src={image} alt={`Processed ${index}`} />
+            </div>
+          ))}
+        </div>
+        <div className="metrics">
+          <h3>Metrics</h3>
+          <pre>{JSON.stringify(metrics, null, 2)}</pre>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="content-area">
       {error && (

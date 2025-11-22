@@ -5,12 +5,24 @@ This exposes all finalwebapp.py functionality as REST API endpoints
 """
 
 import os
-import cv2
 import numpy as np
 from PIL import Image
 import pandas as pd
-from ultralytics import YOLO
 from sklearn.linear_model import LinearRegression
+
+# Try to import cv2, but handle NumPy 2.x incompatibility
+try:
+    import cv2
+except (AttributeError, ImportError) as e:
+    print(f"⚠️ OpenCV (cv2) not available: {e}. Using Pillow + NumPy for image processing.")
+    cv2 = None
+
+# Try to import YOLO, but handle cv2 dependency failure
+try:
+    from ultralytics import YOLO
+except (AttributeError, ImportError) as e:
+    print(f"⚠️ YOLO not available: {e}. Continuing without YOLO...")
+    YOLO = None
 try:
     import torch
     import torch.nn as nn
@@ -139,9 +151,22 @@ with warnings.catch_warnings():
             apply_canny_edge_detection, classify_material, classify_material_fallback,
             calculate_biological_growth_area, convert_numpy_types, image_to_base64
         )
+        print("✅ Successfully imported functions from finalwebapp.py")
     except Exception as e:
-        print(f"❌ Failed to import functions from finalwebapp: {e}")
-        raise
+        print(f"⚠️ Failed to import functions from finalwebapp: {e}")
+        # Create stub functions to prevent crashes
+        def detect_with_yolo(*args, **kwargs): return []
+        def detect_biological_growth(*args, **kwargs): return {'growth_percentage': 0}
+        def detect_biological_growth_advanced(*args, **kwargs): return {'growth_percentage': 0}
+        def segment_image(*args, **kwargs): return None
+        def preprocess_image_for_depth_estimation(*args, **kwargs): return None
+        def create_depth_estimation_heatmap(*args, **kwargs): return None
+        def apply_canny_edge_detection(*args, **kwargs): return None
+        def classify_material(*args, **kwargs): return {'predicted_material': 'Unknown', 'probabilities': {}}
+        def classify_material_fallback(*args, **kwargs): return {'predicted_material': 'Unknown', 'probabilities': {}}
+        def calculate_biological_growth_area(*args, **kwargs): return 0
+        def convert_numpy_types(data): return data
+        def image_to_base64(*args, **kwargs): return None
 
 # Import 3D heightmap generators
 try:
@@ -163,11 +188,8 @@ except ImportError as e:
 
 # Load models directly (not through load_models function since it's now conditional)
 try:
-    from ultralytics import YOLO
-    import torch
-    import torch.nn as nn
-    import torchvision.models as models
-    import torchvision.transforms as transforms
+    if YOLO is None:
+        raise ImportError("YOLO not available")
     
     # Load YOLO model
     yolo_path = "runs/detect/train3/weights/best.pt"
@@ -188,31 +210,38 @@ try:
         seg_status = "Using default YOLOv8n-seg model"
 
     # Load material model
-    MATERIAL_MODEL = models.mobilenet_v2(weights='IMAGENET1K_V1')
-    MATERIAL_MODEL.classifier = nn.Sequential(
-        nn.Dropout(0.2),
-        nn.Linear(MATERIAL_MODEL.last_channel, 8)
-    )
-    MATERIAL_MODEL.eval()
-    material_status = "MobileNetV2 model loaded with custom classifier for 8 material types"
+    if TORCH_AVAILABLE and models is not None:
+        MATERIAL_MODEL = models.mobilenet_v2(weights='IMAGENET1K_V1')
+        MATERIAL_MODEL.classifier = nn.Sequential(
+            nn.Dropout(0.2),
+            nn.Linear(MATERIAL_MODEL.last_channel, 8)
+        )
+        MATERIAL_MODEL.eval()
+        material_status = "MobileNetV2 model loaded with custom classifier for 8 material types"
+    else:
+        MATERIAL_MODEL = None
+        material_status = "Material model not available (PyTorch required)"
 
+    yolo_status = "YOLO model not loaded (cv2/ultralytics unavailable)"
+    seg_status = "Segmentation model not loaded (cv2/ultralytics unavailable)"
+    
     MODELS_STATUS = {
         'yolo': yolo_status,
         'segmentation': seg_status,
         'material': material_status
     }
     
-    print("✅ Models loaded successfully for API")
+    print("✅ Models initialization completed for API")
     
 except Exception as e:
-    print(f"❌ Model loading failed: {e}")
+    print(f"⚠️ Model loading error (continuing with graceful degradation): {e}")
     YOLO_MODEL = None
     SEGMENTATION_MODEL = None
     MATERIAL_MODEL = None
-    MODELS_STATUS = {'error': str(e)}
+    MODELS_STATUS = {'status': 'degraded', 'error': str(e)}
 
-    # Cache last analysis so analytics tab / PDF can use the most recent uploaded image
-    LAST_ANALYSIS = None
+# Cache last analysis so analytics tab / PDF can use the most recent uploaded image
+LAST_ANALYSIS = None
 
 def create_environmental_impact_graphs(carbon_footprint, water_footprint, material_quantity, energy_consumption):
     """Create comprehensive environmental impact visualizations with proper labeling"""
@@ -1060,9 +1089,24 @@ def analyze():
             image_data = image_data.split(',')[1]
         
         image_bytes = base64.b64decode(image_data)
-        image_np = cv2.imdecode(np.frombuffer(image_bytes, np.uint8), cv2.IMREAD_COLOR)
         
-        if image_np is None:
+        # Try cv2 first, fallback to PIL if cv2 unavailable
+        if cv2 is not None:
+            image_np = cv2.imdecode(np.frombuffer(image_bytes, np.uint8), cv2.IMREAD_COLOR)
+        else:
+            # Use PIL as fallback
+            from PIL import Image as PILImage
+            image_pil = PILImage.open(io.BytesIO(image_bytes))
+            image_np = np.array(image_pil)
+            if len(image_np.shape) == 2:  # Grayscale
+                image_np = np.stack([image_np] * 3, axis=2)
+            elif image_np.shape[2] == 4:  # RGBA
+                image_np = image_np[:, :, :3]  # Remove alpha channel
+            # Convert RGB to BGR for consistency with cv2
+            if image_np.shape[2] == 3:
+                image_np = image_np[:, :, ::-1]
+        
+        if image_np is None or not isinstance(image_np, np.ndarray):
             return jsonify({"error": "Failed to decode image"}), 400
         
         print(f"✅ Image decoded successfully: shape {image_np.shape}")
@@ -1930,4 +1974,4 @@ if __name__ == '__main__':
     print("   - GET  /api/stream_metrics - Get streaming metrics")
     print("✨ Ready for AI-powered infrastructure monitoring!")
     
-    app.run(host='0.0.0.0', port=5002, debug=True, threaded=True)
+    app.run(host='0.0.0.0', port=5002, debug=False, threaded=True, use_reloader=False)

@@ -15,6 +15,7 @@ const Navbar = () => {
 
   const navItems = [
     { to: '/', icon: Camera, label: 'Image Analysis' },
+    { to: '/image-insights', icon: Activity, label: 'Image Insights' },
     { to: '/video-analysis', icon: Video, label: 'Video Analysis' },
     { to: '/environmental', icon: Leaf, label: 'Environmental' },
     { to: '/analytics', icon: BarChart, label: 'Analytics' },

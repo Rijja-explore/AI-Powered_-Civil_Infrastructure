@@ -1,9 +1,7 @@
 import streamlit as st
-import cv2
 import numpy as np
 from PIL import Image
 import pandas as pd
-from ultralytics import YOLO
 from sklearn.linear_model import LinearRegression
 import os
 import torch
@@ -15,6 +13,21 @@ import plotly.graph_objects as go
 from datetime import datetime, timedelta
 import tempfile
 import warnings
+
+# Try to import cv2 gracefully (NumPy 2.x incompatibility)
+try:
+    import cv2
+    CV2_AVAILABLE = True
+except (ImportError, AttributeError):
+    CV2_AVAILABLE = False
+    cv2 = None
+
+# Try to import ultralytics YOLO
+try:
+    from ultralytics import YOLO
+except (ImportError, AttributeError):
+    YOLO = None
+
 try:
     from scipy import ndimage
     from skimage import measure
