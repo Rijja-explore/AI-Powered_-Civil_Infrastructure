@@ -24,41 +24,6 @@ function Model3D({ url, isGLB = false }) {
           loader.load(
             url,
             (gltf) => {
-              // Enable vertex colors for all meshes in the scene
-              gltf.scene.traverse((node) => {
-                if (node.isMesh && node.geometry) {
-                  // Compute normals for proper lighting on both sides
-                  node.geometry.computeVertexNormals();
-                  
-                  // Ensure geometry has color attribute
-                  if (node.geometry.attributes.color) {
-                    // Material already has colors, just enable them
-                    if (node.material) {
-                      node.material.vertexColors = true;
-                      node.material.side = THREE.DoubleSide;
-                      node.material.needsUpdate = true;
-                      
-                      if (Array.isArray(node.material)) {
-                        node.material.forEach(mat => {
-                          mat.vertexColors = true;
-                          mat.side = THREE.DoubleSide;
-                          mat.needsUpdate = true;
-                        });
-                      }
-                    }
-                  } else {
-                    // No colors in geometry - create a new material that forces vertex colors
-                    const newMaterial = new THREE.MeshStandardMaterial({
-                      vertexColors: true,
-                      side: THREE.DoubleSide,
-                      metalness: 0.0,
-                      roughness: 0.8,
-                    });
-                    node.material = newMaterial;
-                  }
-                }
-              });
-              
               setModel(gltf.scene);
               setError(null);
             },
@@ -181,19 +146,13 @@ export default function Heightmap3D() {
   const [error, setError] = useState(null);
   const [fileName, setFileName] = useState(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [format, setFormat] = useState("glb"); // Track selected format
   const [settings, setSettings] = useState({
     resize_to: 300,
     height_scale: 12.0,
     smooth_sigma: 1.2,
   });
 
-  async function handleUpload(e, useGLB = null) {
-    // If useGLB is not provided, use the format state
-    if (useGLB === null) {
-      useGLB = format === "glb";
-    }
-    
+  async function handleUpload(e, useGLB = true) {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -269,8 +228,6 @@ export default function Heightmap3D() {
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                 <label style={{ fontWeight: 600, color: "var(--dark)" }}>Format:</label>
                 <select
-                  value={format}
-                  onChange={(e) => setFormat(e.target.value)}
                   style={{
                     padding: "0.5rem 1rem",
                     borderRadius: "var(--border-radius)",
@@ -281,8 +238,8 @@ export default function Heightmap3D() {
                     fontWeight: 600,
                   }}
                 >
-                  <option value="glb">🎨 GLB (Textured) - Recommended</option>
-                  <option value="stl">⚪ STL (Monochrome)</option>
+                  <option>🎨 GLB (Textured) - Recommended</option>
+                  <option>⚪ STL (Monochrome)</option>
                 </select>
               </div>
               
@@ -406,7 +363,7 @@ export default function Heightmap3D() {
               <input
                 type="file"
                 accept="image/*"
-                onChange={(e) => handleUpload(e)}
+                onChange={(e) => handleUpload(e, true)}
                 style={{ display: "none" }}
                 id="imageUpload"
               />
@@ -462,12 +419,11 @@ export default function Heightmap3D() {
               </h2>
             </div>
             <div className="card-body">
-              <div style={{ height: "600px", borderRadius: "var(--border-radius)", overflow: "hidden", border: "1px solid var(--glass-border)" }}>
+              <div style={{ height: "700px", borderRadius: "var(--border-radius)", overflow: "hidden", border: "1px solid var(--glass-border)" }}>
                 <Canvas camera={{ position: [150, 150, 150], fov: 50 }}>
-                  <ambientLight intensity={1.5} />
-                  <directionalLight position={[10, 10, 10]} intensity={1.2} />
-                  <directionalLight position={[-10, -10, -10]} intensity={0.8} />
-                  <pointLight position={[0, 0, 50]} intensity={0.6} />
+                  <ambientLight intensity={0.6} />
+                  <directionalLight position={[10, 10, 10]} intensity={0.8} />
+                  <pointLight position={[-10, -10, -10]} intensity={0.3} />
                   
                   <Suspense fallback={<LoadingSpinner />}>
                     <Model3D url={modelUrl} isGLB={modelType === "glb"} />
