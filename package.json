@@ -9,16 +9,25 @@
     "install-all": "npm install && cd frontend && npm install",
     "dev": "python start_enhanced_app.py"
   },
-  "keywords": ["AI", "Infrastructure", "Computer Vision", "Structural Health", "Monitoring", "Civil Engineering"],
+  "keywords": [
+    "AI",
+    "Infrastructure",
+    "Computer Vision",
+    "Structural Health",
+    "Monitoring",
+    "Civil Engineering"
+  ],
   "author": "InfraVision AI Development Team",
   "license": "MIT",
   "dependencies": {
+    "@csstools/normalize.css": "^12.1.1",
     "@fortawesome/fontawesome-free": "^7.1.0",
     "@popperjs/core": "^2.11.8",
     "axios": "^1.12.2",
     "bootstrap": "^5.3.8",
     "react-bootstrap": "^2.10.10",
     "react-dropzone": "^14.3.8",
-    "react-icons": "^5.5.0"
+    "react-icons": "^5.5.0",
+    "sanitize.css": "^13.0.0"
   }
 }

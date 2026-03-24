@@ -137,9 +137,11 @@ def calculate_severity(width_cm, length_cm, label):
 
 def detect_with_yolo(image_np, px_to_cm_ratio=0.1, model=None):
     try:
+        print("Debug: Starting YOLO detection")
         if model is None:
             model = yolo_model
         if model is None:
+            print("Debug: YOLO model is not loaded. Using placeholder detection.")
             if __name__ == "__main__":
                 st.warning("⚠ YOLO model is not loaded. Using placeholder detection.")
             height, width = image_np.shape[:2]
@@ -159,12 +161,15 @@ def detect_with_yolo(image_np, px_to_cm_ratio=0.1, model=None):
             return annotated_image, [placeholder_detection]
 
         image_rgb = cv2.cvtColor(image_np, cv2.COLOR_BGR2RGB)
+        print("Debug: Converted image to RGB")
         results = model.predict(image_rgb, conf=0.3)
+        print(f"Debug: Results from model.predict: {results}")
         crack_details = []
         annotated_image = image_np.copy()
 
         for result in results:
             if result.boxes is not None and len(result.boxes) > 0:
+                print(f"Debug: Detected {len(result.boxes)} boxes")
                 for box in result.boxes:
                     x1, y1, x2, y2 = box.xyxy[0].cpu().numpy().astype(int)
                     width_px = x2 - x1
@@ -201,10 +206,21 @@ def detect_with_yolo(image_np, px_to_cm_ratio=0.1, model=None):
                     cv2.putText(annotated_image, display_text, (x1, y1 - 10),
                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
 
-        if not crack_details and __name__ == "__main__":
-            st.info("ℹ No objects detected by YOLO.")
+        # Ensure crack_details is not empty
+        if not crack_details:
+            print("Debug: No cracks detected")
+            crack_details.append({
+                'width_cm': 0,
+                'length_cm': 0,
+                'severity': 'None',
+                'confidence': 0,
+                'label': 'No cracks detected',
+                'bbox': (0, 0, 0, 0)
+            })
+
         return annotated_image, crack_details
     except Exception as e:
+        print(f"Debug: Exception occurred in detect_with_yolo: {e}")
         if __name__ == "__main__":
             st.error(f"❌ YOLO detection failed: {str(e)}")
         return image_np, []
