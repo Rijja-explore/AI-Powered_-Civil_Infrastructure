@@ -423,6 +423,107 @@ def create_environmental_impact_graphs(carbon_footprint, water_footprint, materi
         return {}
 
 
+# ==================== HELPER FUNCTIONS FOR ADVANCED ANALYSIS VISUALIZATIONS ====================
+
+def generate_moisture_dampness_heatmap(image, segmented_image):
+    """Generate a moisture/dampness heatmap visualization"""
+    try:
+        if image is None:
+            # Return a blank image
+            return np.zeros((image.shape[0], image.shape[1], 3), dtype=np.uint8)
+        
+        # Create moisture detection based on color analysis
+        # Blue channels typically indicate moisture
+        hsv = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
+        
+        # Detect darker regions (typically moisture-affected areas)
+        lower_dark = np.array([0, 0, 0])
+        upper_dark = np.array([180, 255, 100])
+        moisture_mask = cv2.inRange(hsv, lower_dark, upper_dark)
+        
+        # Apply Gaussian blur for smooth heatmap
+        moisture_blurred = cv2.GaussianBlur(moisture_mask, (21, 21), 0)
+        
+        # Create heatmap visualization
+        heatmap = cv2.applyColorMap(moisture_blurred, cv2.COLORMAP_JET)
+        
+        # Blend with original image
+        result = cv2.addWeighted(image, 0.5, heatmap, 0.5, 0)
+        
+        return result
+    except Exception as e:
+        print(f"⚠️ Error generating moisture heatmap: {e}")
+        # Return a fallback heatmap
+        return image if image is not None else np.zeros((224, 224, 3), dtype=np.uint8)
+
+
+def generate_structural_stress_map(image, annotated_image):
+    """Generate a structural stress visualization based on detected features"""
+    try:
+        if image is None:
+            return np.zeros((image.shape[0], image.shape[1], 3), dtype=np.uint8)
+        
+        # Create stress map from edge detection
+        gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+        edges = cv2.Canny(gray, 100, 200)
+        
+        # Dilate edges to make them more prominent
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+        stress_mask = cv2.dilate(edges, kernel, iterations=2)
+        
+        # Apply Gaussian blur
+        stress_blurred = cv2.GaussianBlur(stress_mask, (21, 21), 0)
+        
+        # Create red-hot colormap for stress
+        stress_heatmap = cv2.applyColorMap(stress_blurred, cv2.COLORMAP_HOT)
+        
+        # Blend with original
+        result = cv2.addWeighted(image, 0.4, stress_heatmap, 0.6, 0)
+        
+        return result
+    except Exception as e:
+        print(f"⚠️ Error generating structural stress map: {e}")
+        return image if image is not None else np.zeros((224, 224, 3), dtype=np.uint8)
+
+
+def generate_thermal_infrared_simulation(image, depth_map):
+    """Generate a thermal/infrared simulation visualization"""
+    try:
+        if image is None:
+            return np.zeros((image.shape[0], image.shape[1], 3), dtype=np.uint8)
+        
+        # Use depth information to simulate thermal signature
+        gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+        
+        # If depth_map is not available, use grayscale
+        if depth_map is None:
+            thermal_data = gray
+        else:
+            # Blend depth with grayscale for thermal effect
+            if len(depth_map.shape) == 3:
+                depth_gray = cv2.cvtColor(depth_map, cv2.COLOR_RGB2GRAY)
+            else:
+                depth_gray = depth_map
+            thermal_data = cv2.addWeighted(gray, 0.5, depth_gray, 0.5, 0)
+        
+        # Apply contrast enhancement
+        thermal_data = cv2.equalizeHist(thermal_data)
+        
+        # Apply thermal colormap (inferno)
+        thermal_heatmap = cv2.applyColorMap(thermal_data, cv2.COLORMAP_INFERNO)
+        
+        # Add slight transparency blend
+        result = cv2.addWeighted(image, 0.3, thermal_heatmap, 0.7, 0)
+        
+        return result
+    except Exception as e:
+        print(f"⚠️ Error generating thermal simulation: {e}")
+        return image if image is not None else np.zeros((224, 224, 3), dtype=np.uint8)
+
+
+# ==================== END HELPER FUNCTIONS ====================
+
+
 def create_material_properties_chart(material_name, probabilities, carbon_footprint, sustainability_score):
     """Create a bar chart for material properties comparison across all materials
     Returns base64 PNG data URI or None on failure."""
