@@ -23,7 +23,7 @@ const VideoAnalysis = () => {
   const fileInputRef = useRef(null);
   const realTimeIntervalRef = useRef(null);
   
-  const { setLastAnalysis } = useAnalysis();
+  const { updateAnalysis } = useAnalysis();
 
   const API_URL = 'http://localhost:5002';
 
@@ -171,15 +171,11 @@ const VideoAnalysis = () => {
       formData.append('px_to_cm_ratio', '0.1');
       formData.append('confidence_threshold', '0.3');
 
-      toast.info('🎬 Starting comprehensive video analysis...');
+      toast.loading('🎬 Starting comprehensive video analysis...');
       
       const response = await fetch(`${API_URL}/api/analyze_video`, {
         method: 'POST',
-        body: formData,
-        onUploadProgress: (progressEvent) => {
-          const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-          setProcessingProgress(Math.min(progress * 0.3, 30));
-        }
+        body: formData
       });
 
       if (!response.ok) {
@@ -243,7 +239,17 @@ const VideoAnalysis = () => {
       let materialCounts = {};
       let severityCounts = { critical: 0, severe: 0, moderate: 0, minor: 0 };
 
-      data.frame_results.forEach((frameResult, index) => {
+      // Handle frame_results as object/dict (not array) - add safety check
+      let frameResultsArray = [];
+      if (Array.isArray(data.frame_results)) {
+        frameResultsArray = data.frame_results;
+      } else if (data.frame_results && typeof data.frame_results === 'object') {
+        frameResultsArray = Object.values(data.frame_results);
+      } else {
+        throw new Error('Invalid frame_results format from backend');
+      }
+
+      frameResultsArray.forEach((frameResult, index) => {
         const frameNumber = index + 1;
         
         // Enhance each frame result with comprehensive analysis
@@ -312,11 +318,11 @@ const VideoAnalysis = () => {
           });
         }
 
-        setProcessingProgress(40 + (index / data.frame_results.length) * 50);
+        setProcessingProgress(40 + (index / frameResultsArray.length) * 50);
       });
 
       // Calculate comprehensive summary
-      const totalFrames = data.frame_results.length;
+      const totalFrames = frameResultsArray.length;
       const avgStructuralScore = totalFrames > 0 ? totalStructuralScore / totalFrames : 85;
 
       comprehensiveVideoResults.comprehensive_summary = {
@@ -385,7 +391,7 @@ const VideoAnalysis = () => {
 
       // Update the analysis context with the latest frame
       if (Object.keys(processedFrameResults).length > 0) {
-        setLastAnalysis(processedFrameResults[1]);
+        updateAnalysis(processedFrameResults[1], null);
       }
 
       toast.success(`🎉 Video analysis completed! Processed ${totalFrames} frames with comprehensive insights.`);
@@ -799,6 +805,79 @@ const VideoAnalysis = () => {
                         </div>
                       </div>
                     </div>
+
+                    {/* 9-Image Analysis Gallery */}
+                    {frameResults[currentFrame]?.analysis_images && Object.values(frameResults[currentFrame].analysis_images).some(img => img) && (
+                      <div style={{
+                        background: 'rgba(31, 41, 55, 0.6)',
+                        borderRadius: '12px',
+                        padding: '1.5rem',
+                        border: '1px solid rgba(59, 130, 246, 0.1)',
+                        marginTop: '1.5rem'
+                      }}>
+                        <h5 style={{ color: '#ffffff', marginBottom: '1.5rem' }}>9-Image Analysis Suite</h5>
+                        <div style={{
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                          gap: '1rem'
+                        }}>
+                          {frameResults[currentFrame].analysis_images?.original && (
+                            <div>
+                              <div style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.75rem', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Original Frame</div>
+                              <img src={frameResults[currentFrame].analysis_images.original} alt="Original" style={{ width: '100%', borderRadius: '8px', border: '1px solid rgba(59, 130, 246, 0.2)' }} />
+                            </div>
+                          )}
+                          {frameResults[currentFrame].analysis_images?.annotated_cracks && (
+                            <div>
+                              <div style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.75rem', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Crack Detection</div>
+                              <img src={frameResults[currentFrame].analysis_images.annotated_cracks} alt="Annotated" style={{ width: '100%', borderRadius: '8px', border: '1px solid rgba(59, 130, 246, 0.2)' }} />
+                            </div>
+                          )}
+                          {frameResults[currentFrame].analysis_images?.segmented && (
+                            <div>
+                              <div style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.75rem', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Segmentation</div>
+                              <img src={frameResults[currentFrame].analysis_images.segmented} alt="Segmented" style={{ width: '100%', borderRadius: '8px', border: '1px solid rgba(59, 130, 246, 0.2)' }} />
+                            </div>
+                          )}
+                          {frameResults[currentFrame].analysis_images?.depth_heatmap && (
+                            <div>
+                              <div style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.75rem', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Depth Heatmap</div>
+                              <img src={frameResults[currentFrame].analysis_images.depth_heatmap} alt="Depth" style={{ width: '100%', borderRadius: '8px', border: '1px solid rgba(59, 130, 246, 0.2)' }} />
+                            </div>
+                          )}
+                          {frameResults[currentFrame].analysis_images?.edge_detection && (
+                            <div>
+                              <div style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.75rem', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Edge Detection</div>
+                              <img src={frameResults[currentFrame].analysis_images.edge_detection} alt="Edges" style={{ width: '100%', borderRadius: '8px', border: '1px solid rgba(59, 130, 246, 0.2)' }} />
+                            </div>
+                          )}
+                          {frameResults[currentFrame].analysis_images?.growth_mask && (
+                            <div>
+                              <div style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.75rem', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Growth Detection</div>
+                              <img src={frameResults[currentFrame].analysis_images.growth_mask} alt="Growth" style={{ width: '100%', borderRadius: '8px', border: '1px solid rgba(59, 130, 246, 0.2)' }} />
+                            </div>
+                          )}
+                          {frameResults[currentFrame].analysis_images?.hsv_analysis && (
+                            <div>
+                              <div style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.75rem', marginBottom: '0.5rem', textTransform: 'uppercase' }}>HSV Analysis</div>
+                              <img src={frameResults[currentFrame].analysis_images.hsv_analysis} alt="HSV" style={{ width: '100%', borderRadius: '8px', border: '1px solid rgba(59, 130, 246, 0.2)' }} />
+                            </div>
+                          )}
+                          {frameResults[currentFrame].analysis_images?.gradient_magnitude && (
+                            <div>
+                              <div style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.75rem', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Gradient Magnitude</div>
+                              <img src={frameResults[currentFrame].analysis_images.gradient_magnitude} alt="Gradient" style={{ width: '100%', borderRadius: '8px', border: '1px solid rgba(59, 130, 246, 0.2)' }} />
+                            </div>
+                          )}
+                          {frameResults[currentFrame].analysis_images?.binary_threshold && (
+                            <div>
+                              <div style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.75rem', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Binary Threshold</div>
+                              <img src={frameResults[currentFrame].analysis_images.binary_threshold} alt="Binary" style={{ width: '100%', borderRadius: '8px', border: '1px solid rgba(59, 130, 246, 0.2)' }} />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   )}
                 </div>
               )}

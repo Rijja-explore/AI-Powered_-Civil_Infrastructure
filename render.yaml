@@ -1,0 +1,63 @@
+services:
+  # Backend API Service
+  - type: web
+    name: infravision-ai-backend
+    env: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn -w 4 -b 0.0.0.0:$PORT finalwebapp_api:app
+    
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: FLASK_DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        fromFile: render.secret
+      - key: CORS_ORIGINS
+        value: https://infravision-ai-frontend.onrender.com
+      - key: MAX_CONTENT_LENGTH
+        value: "52428800"
+      - key: MAX_FRAMES_TO_PROCESS
+        value: "8"
+      - key: USE_GPU
+        value: "False"
+    
+    regions:
+      - us-east
+    autoDeploy: true
+    branch: main
+    healthCheckPath: /api/health
+    preDeployCommand: |
+      pip install gunicorn python-dotenv
+
+  # Frontend Static Site
+  - type: static
+    name: infravision-ai-frontend
+    plan: free
+    buildCommand: |
+      cd frontend
+      npm install
+      npm run build
+    staticPublishPath: frontend/build
+    
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://infravision-ai-backend.onrender.com
+      - key: REACT_APP_ENV
+        value: production
+    
+    regions:
+      - us-east
+    autoDeploy: true
+    branch: main
+
+  # PostgreSQL Database (Optional)
+  # Uncomment to use database
+  # - type: pserv
+  #   name: infravision-db
+  #   plan: starter
+  #   region: us-east
+  #   databaseName: infravision_db
+  #   user: admin
+  #   postgres_version: 15

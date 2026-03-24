@@ -40,6 +40,7 @@ except ImportError as e:
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
+import time
 import tempfile
 import warnings
 import base64
@@ -217,21 +218,34 @@ with warnings.catch_warnings():
                 print(f"Error in stub detect_biological_growth_advanced: {e}")
                 return image_np.copy(), False, 0
         def segment_image(image_np, model=None):
-            """Basic image segmentation using edge detection"""
+            """AI Segmentation using YOLOv8 segmentation model"""
             if image_np is None:
                 return np.zeros((480, 640, 3), dtype=np.uint8), None
             try:
-                if cv2:
-                    gray = cv2.cvtColor(image_np, cv2.COLOR_BGR2GRAY)
-                    edges = cv2.Canny(gray, 50, 150)
-                    segmented = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
-                    segmented[edges > 0] = [255, 0, 0]
-                    return segmented, None
+                if cv2 and YOLO is not None:
+                    from ultralytics import YOLO as YOLOModel
+                    seg_model = YOLOModel("./segmentation_model/weights/best.pt") if model is None else model
+                    image_rgb = cv2.cvtColor(image_np, cv2.COLOR_BGR2RGB)
+                    results = seg_model.predict(source=image_rgb, conf=0.3, save=False)
+                    segmented_image = results[0].plot()
+                    segmented_image_bgr = cv2.cvtColor(segmented_image, cv2.COLOR_RGB2BGR)
+                    return segmented_image_bgr, results
                 else:
-                    return image_np.copy(), None
+                    # Fallback to edge detection if models unavailable
+                    gray = cv2.cvtColor(image_np, cv2.COLOR_BGR2GRAY) if cv2 else image_np[:,:,0] if len(image_np.shape) > 2 else image_np
+                    edges = cv2.Canny(gray, 50, 150) if cv2 else gray
+                    segmented = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR) if cv2 else edges
+                    segmented[edges > 0] = [255, 0, 0] if cv2 else segments
+                    return segmented, None
             except Exception as e:
-                print(f"Error in stub segment_image: {e}")
-                return image_np.copy(), None
+                print(f"Error in segment_image: {e}")
+                try:
+                    # Fallback segmentation
+                    gray = cv2.cvtColor(image_np, cv2.COLOR_BGR2GRAY) if cv2 else image_np
+                    edges = cv2.Canny(gray, 50, 150) if cv2 else gray
+                    return cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR) if cv2 else edges, None
+                except:
+                    return image_np.copy(), None
         def preprocess_image_for_depth_estimation(image_np):
             """Preprocess image for depth estimation"""
             if image_np is None:
@@ -277,7 +291,16 @@ with warnings.catch_warnings():
             elif isinstance(data, (np.integer, np.int64, np.int32)):
                 return int(data)
             elif isinstance(data, (np.floating, np.float64, np.float32)):
-                return float(data)
+                val = float(data)
+                # Handle NaN and infinity
+                if np.isnan(val) or np.isinf(val):
+                    return 0.0
+                return val
+            elif isinstance(data, float):
+                # Handle regular Python floats that are NaN or infinity
+                if np.isnan(data) or np.isinf(data):
+                    return 0.0
+                return data
             elif isinstance(data, np.ndarray):
                 return data.tolist()
             elif isinstance(data, dict):
@@ -382,6 +405,13 @@ except Exception as e:
 
 # Cache last analysis so analytics tab / PDF can use the most recent uploaded image
 LAST_ANALYSIS = None
+
+# Global variables for camera and streaming
+camera_connected = False
+current_camera = None
+stream_active = False
+stream_thread = None
+current_frame_data = None
 
 def create_environmental_impact_graphs(carbon_footprint, water_footprint, material_quantity, energy_consumption):
     """Create comprehensive environmental impact visualizations with proper labeling"""
@@ -1466,39 +1496,313 @@ def analyze():
         traceback.print_exc()
         return jsonify({"error": f"Analysis failed: {str(e)}"}), 500
 
+def generate_frame_analysis_images(frame, annotated_image, growth_image, segmented_image, depth_heatmap, edges):
+    """Generate 9 analysis images from a frame and return as base64"""
+    import cv2
+    import base64
+    
+    images = {}
+    
+    def encode_to_base64(img):
+        """Convert image to base64 data URI"""
+        if img is None:
+            return None
+        try:
+            _, buffer = cv2.imencode('.jpg', img)
+            b64_string = base64.b64encode(buffer).decode('utf-8')
+            return f"data:image/jpeg;base64,{b64_string}"
+        except:
+            return None
+    
+    # 1. Original frame
+    images['original'] = encode_to_base64(frame)
+    
+    # 2. Annotated with cracks
+    images['annotated'] = encode_to_base64(annotated_image)
+    
+    # 3. Segmented
+    images['segmented'] = encode_to_base64(segmented_image)
+    
+    # 4. Depth heatmap
+    images['depth_heatmap'] = encode_to_base64(depth_heatmap)
+    
+    # 5. Edge detection
+    images['edges'] = encode_to_base64(cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR) if len(edges.shape) == 2 else edges)
+    
+    # 6. Growth mask
+    images['growth_mask'] = encode_to_base64(growth_image)
+    
+    # 7. HSV threshold (for green vegetation)
+    try:
+        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        lower_green = np.array([35, 50, 50])
+        upper_green = np.array([85, 255, 255])
+        hsv_mask = cv2.inRange(hsv, lower_green, upper_green)
+        hsv_colored = cv2.cvtColor(hsv_mask, cv2.COLOR_GRAY2BGR)
+        images['hsv_mask'] = encode_to_base64(hsv_colored)
+    except:
+        images['hsv_mask'] = None
+    
+    # 8. Gradient magnitude (Sobel)
+    try:
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) if len(frame.shape) == 3 else frame
+        sobelx = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=3)
+        sobely = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=3)
+        magnitude = np.sqrt(sobelx**2 + sobely**2)
+        magnitude = cv2.normalize(magnitude, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
+        magnitude_colored = cv2.cvtColor(magnitude, cv2.COLOR_GRAY2BGR)
+        images['gradient'] = encode_to_base64(magnitude_colored)
+    except:
+        images['gradient'] = None
+    
+    # 9. Binary threshold (contrast enhanced)
+    try:
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) if len(frame.shape) == 3 else frame
+        _, binary = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
+        binary_colored = cv2.cvtColor(binary, cv2.COLOR_GRAY2BGR)
+        images['binary'] = encode_to_base64(binary_colored)
+    except:
+        images['binary'] = None
+    
+    return images
+
+@app.route('/api/analyze_video', methods=['POST'])
+def analyze_video():
+    """Analyze video file frame by frame for comprehensive structural assessment"""
+    try:
+        print("📹 Received video analysis request")
+        
+        # Check for video file
+        if 'video' not in request.files:
+            return jsonify({"error": "No video file provided"}), 400
+        
+        video_file = request.files['video']
+        if video_file.filename == '':
+            return jsonify({"error": "No video file selected"}), 400
+        
+        # Get parameters
+        px_to_cm_ratio = float(request.form.get('px_to_cm_ratio', 0.1))
+        confidence_threshold = float(request.form.get('confidence_threshold', 0.3))
+        analysis_type = request.form.get('analysis_type', 'comprehensive')
+        
+        # Save video to temporary file
+        import tempfile
+        import os
+        temp_dir = tempfile.gettempdir()
+        temp_video_path = os.path.join(temp_dir, f"temp_video_{int(time.time())}.mp4")
+        video_file.save(temp_video_path)
+        
+        print(f"✅ Saved video to: {temp_video_path}")
+        
+        # Open video file
+        cap = cv2.VideoCapture(temp_video_path)
+        if not cap.isOpened():
+            os.remove(temp_video_path)
+            return jsonify({"error": "Cannot open video file"}), 400
+        
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        
+        print(f"📊 Video info: {total_frames} frames, {fps} fps, {frame_width}x{frame_height}")
+        
+        frame_results = {}
+        frame_count = 0
+        analysis_start_time = time.time()
+        
+        # Process every Nth frame (to speed up for long videos) - Reduced to 8 frames max
+        max_frames_to_process = 8
+        frame_interval = max(1, total_frames // max_frames_to_process)  # Max 8 frames analyzed
+        
+        while frame_count < total_frames:
+            ret, frame = cap.read()
+            if not ret:
+                break
+            
+            if frame_count % frame_interval == 0:
+                frame_num = frame_count
+                try:
+                    # Analyze frame
+                    annotated_image, crack_details = detect_with_yolo(frame, px_to_cm_ratio, YOLO_MODEL)
+                    growth_analysis, growth_image = detect_biological_growth(frame, crack_details)
+                    
+                    result = segment_image(frame, SEGMENTATION_MODEL)
+                    if isinstance(result, tuple):
+                        segmented_image, seg_results = result
+                    else:
+                        segmented_image = result
+                    
+                    if segmented_image is None:
+                        segmented_image = frame.copy()
+                    
+                    preprocessed = preprocess_image_for_depth_estimation(frame)
+                    depth_heatmap = create_depth_estimation_heatmap(preprocessed)
+                    
+                    edges = apply_canny_edge_detection(frame)
+                    material_name, material_probs = classify_material(frame)
+                    
+                    total_cracks = len(crack_details) if crack_details else 0
+                    
+                    # Generate 9 analysis images
+                    frame_images = generate_frame_analysis_images(
+                        frame, annotated_image, growth_image, segmented_image, depth_heatmap, edges
+                    )
+                    
+                    frame_results[frame_num] = {
+                        "timestamp": frame_num / fps if fps > 0 else 0,
+                        "crack_detection": {
+                            "count": total_cracks,
+                            "details": crack_details[:5] if crack_details else []
+                        },
+                        "biological_growth": {
+                            "affected_area_cm2": round(growth_analysis.get('affected_area_cm2', 0), 2),
+                            "growth_detected": growth_analysis.get('growth_percentage', 0) > 5,
+                            "growth_percentage": round(growth_analysis.get('growth_percentage', 0), 1)
+                        },
+                        "material_analysis": {
+                            "predicted_material": material_name if material_name else 'Unknown',
+                            "confidence": float(max(material_probs.values()) if material_probs else 0)
+                        },
+                        "segmentation_results": {
+                            "masks_count": seg_results.n if hasattr(seg_results, 'n') and seg_results else 0,
+                            "segmentation_available": segmented_image is not None
+                        },
+                        "environmental_impact_assessment": {
+                            "carbon_footprint_kg": round(total_cracks * 0.5, 2),
+                            "water_footprint_liters": round(growth_analysis.get('growth_percentage', 0) * 10, 2),
+                            "sustainability_score": round(max(0, 100 - total_cracks * 5 - growth_analysis.get('growth_percentage', 0)), 1)
+                        },
+                        "data_science_insights": {
+                            "structural_health_score": round(max(0, 100 - total_cracks * 5 - growth_analysis.get('growth_percentage', 0)), 1),
+                            "deterioration_index": round((total_cracks * 0.4 + growth_analysis.get('growth_percentage', 0) * 0.6), 2),
+                            "maintenance_urgency": "High" if total_cracks > 5 else "Medium" if total_cracks > 2 else "Low"
+                        },
+                        "analysis_images": {
+                            "original": frame_images.get('original'),
+                            "annotated_cracks": frame_images.get('annotated'),
+                            "segmented": frame_images.get('segmented'),
+                            "depth_heatmap": frame_images.get('depth_heatmap'),
+                            "edge_detection": frame_images.get('edges'),
+                            "growth_mask": frame_images.get('growth_mask'),
+                            "hsv_analysis": frame_images.get('hsv_mask'),
+                            "gradient_magnitude": frame_images.get('gradient'),
+                            "binary_threshold": frame_images.get('binary')
+                        }
+                    }
+                    
+                    print(f"✅ Analyzed frame {frame_num}: {total_cracks} cracks detected")
+                    
+                except Exception as e:
+                    print(f"⚠️ Error analyzing frame {frame_num}: {str(e)}")
+                    frame_results[frame_num] = {"error": str(e)}
+            
+            frame_count += 1
+        
+        cap.release()
+        os.remove(temp_video_path)
+        
+        analysis_duration = time.time() - analysis_start_time
+        
+        # Calculate aggregate statistics
+        total_cracks_video = sum(
+            r.get("crack_detection", {}).get("count", 0) 
+            for r in frame_results.values() if "error" not in r
+        )
+        avg_structural_health = np.mean([
+            r.get("data_science_insights", {}).get("structural_health_score", 50)
+            for r in frame_results.values() if "error" not in r
+        ]) if frame_results else 50
+        
+        response = {
+            "success": True,
+            "total_frames": total_frames,
+            "frames_processed": len(frame_results),
+            "fps": fps,
+            "analysis_duration": round(analysis_duration, 2),
+            "frame_results": frame_results,
+            "comprehensive_summary": {
+                "total_cracks_detected": int(total_cracks_video),
+                "average_structural_health": round(float(avg_structural_health), 1),
+                "critical_frames": [
+                    f for f, r in frame_results.items()
+                    if "error" not in r and r.get("crack_detection", {}).get("count", 0) > 5
+                ],
+                "risk_level": "High" if total_cracks_video > 20 else "Medium" if total_cracks_video > 5 else "Low"
+            }
+        }
+        
+        return jsonify(convert_numpy_types(response))
+        
+    except Exception as e:
+        print(f"❌ Error in video analysis: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": f"Video analysis failed: {str(e)}"}), 500
+
 @app.route('/api/connect_camera', methods=['POST'])
 def connect_camera():
     """Connect to camera for real-time monitoring"""
+    global camera_connected, current_camera
     try:
-        # Import camera capture functions
-        import cv2
-        
-        # Try to connect to camera
-        cap = cv2.VideoCapture(0)
-        if cap.isOpened():
-            cap.release()
+        if camera_connected and current_camera is not None and current_camera.isOpened():
             return jsonify({
                 "success": True,
-                "message": "Camera connected successfully",
+                "message": "Camera already connected",
                 "camera_id": "main_camera",
                 "resolution": "640x480",
                 "fps": 30
             })
-        else:
-            return jsonify({"success": False, "error": "Could not access camera"}), 500
+        
+        # Try to connect to camera
+        cap = cv2.VideoCapture(0) if cv2 else None
+        if cap is None or not cap.isOpened():
+            return jsonify({
+                "success": False,
+                "error": "Could not access camera. Check if camera is connected and not in use by another application."
+            }), 500
+        
+        # Set camera properties
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+        cap.set(cv2.CAP_PROP_FPS, 30)
+        cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+        
+        current_camera = cap
+        camera_connected = True
+        
+        print("✅ Camera connected successfully")
+        
+        return jsonify({
+            "success": True,
+            "message": "Camera connected successfully",
+            "camera_id": "main_camera",
+            "resolution": "640x480",
+            "fps": 30
+        })
     except Exception as e:
+        print(f"❌ Camera connection error: {str(e)}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route('/api/disconnect_camera', methods=['POST'])
 def disconnect_camera():
     """Disconnect camera"""
+    global camera_connected, current_camera
     try:
-        # In a real implementation, this would close camera connection
+        if current_camera is not None and current_camera.isOpened():
+            current_camera.release()
+        
+        camera_connected = False
+        current_camera = None
+        
+        print("✅ Camera disconnected successfully")
+        
         return jsonify({
             "success": True,
             "message": "Camera disconnected successfully"
         })
     except Exception as e:
+        print(f"❌ Camera disconnection error: {str(e)}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route('/api/start_stream', methods=['POST'])
@@ -2066,39 +2370,62 @@ def start_realtime_capture():
 @app.route('/api/capture_and_analyze', methods=['POST'])
 def capture_and_analyze():
     """Capture frame from camera and analyze it"""
+    global current_camera
     try:
-        from camera_capture import capture_single_frame
+        # Check if camera is connected
+        if not camera_connected or current_camera is None or not current_camera.isOpened():
+            return jsonify({"success": False, "error": "Camera not connected. Connect camera first."}), 400
         
-        frame, error = capture_single_frame()
-        if error:
-            return jsonify({"success": False, "error": error}), 500
+        # Capture frame from active camera
+        ret, frame = current_camera.read()
+        if not ret or frame is None:
+            return jsonify({"success": False, "error": "Failed to capture frame from camera"}), 500
+        
+        # Analyze the captured frame using existing ML functions
+        try:
+            annotated_image, crack_details = detect_with_yolo(frame, 0.1, YOLO_MODEL)
+            growth_analysis, growth_image = detect_biological_growth(frame, crack_details)
+            material_name, material_probs = classify_material(frame)  # Unpack tuple
             
-        if frame is not None:
-            # Convert frame to format expected by analyze function
-            image_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            total_cracks = len(crack_details) if crack_details else 0
             
-            # Analyze the captured frame
-            # (Using existing analysis logic)
-            results = analyze_image_comprehensive(
-                image_rgb, 
-                px_to_cm_ratio=0.1, 
-                confidence_threshold=0.3
-            )
+            # Prepare compact frame-wise results
+            analysis_result = {
+                "cracks": total_cracks,
+                "severity": "High" if total_cracks > 5 else "Medium" if total_cracks > 2 else "Low",
+                "material": material_name if material_name else 'Unknown',
+                "confidence": float(max(material_probs.values()) if material_probs else 0.0),
+                "growth_detected": growth_analysis.get('growth_percentage', 0) > 5,
+                "health_score": max(0, 100 - total_cracks * 5 - growth_analysis.get('growth_percentage', 0))
+            }
             
-            # Encode original frame
+            # Encode frame as base64
             _, buffer = cv2.imencode('.jpg', frame)
             frame_base64 = base64.b64encode(buffer).decode('utf-8')
             
-            return jsonify({
+            return jsonify(convert_numpy_types({
                 "success": True,
                 "frame": f"data:image/jpeg;base64,{frame_base64}",
-                "analysis": results,
-                "message": "Frame captured and analyzed successfully"
-            })
-        else:
-            return jsonify({"success": False, "error": "Failed to capture frame"}), 500
+                "analysis": analysis_result,
+                "message": f"Detected {total_cracks} cracks | Health: {analysis_result['health_score']:.1f}%"
+            }))
+            
+        except Exception as analysis_error:
+            print(f"Analysis error: {str(analysis_error)}")
+            # Return frame even if analysis fails
+            _, buffer = cv2.imencode('.jpg', frame)
+            frame_base64 = base64.b64encode(buffer).decode('utf-8')
+            return jsonify(convert_numpy_types({
+                "success": True,
+                "frame": f"data:image/jpeg;base64,{frame_base64}",
+                "analysis": {"cracks": 0, "error": str(analysis_error)},
+                "message": "Frame captured (analysis pending)"
+            }))
             
     except Exception as e:
+        print(f"Capture error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
 
 
