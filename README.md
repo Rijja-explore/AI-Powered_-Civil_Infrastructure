@@ -1,3 +1,13 @@
+---
+title: Infravision AI API
+emoji: 🚀
+colorFrom: blue
+colorTo: green
+sdk: docker
+app_file: app.py
+pinned: false
+---
+
 # InfraVision AI - Intelligent Infrastructure Monitoring System
 
 An advanced AI-powered platform for real-time structural health monitoring and infrastructure assessment using computer vision and machine learning.
