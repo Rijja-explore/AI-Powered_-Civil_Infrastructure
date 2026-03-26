@@ -30,6 +30,9 @@ COPY pdf_report.py .
 COPY segmentation_with_localisation.py .
 COPY image_3d_heightmap.py .
 
+# Install git-lfs to ensure LFS files are properly downloaded
+RUN apt-get update && apt-get install -y git-lfs curl && rm -rf /var/lib/apt/lists/*
+
 # Copy all other Python files
 COPY *.py ./
 
@@ -39,14 +42,13 @@ RUN mkdir -p /app/runs/detect/train/weights /app/runs/detect/train3/weights && \
     mkdir -p /app/frontend/src /app/frontend/public && \
     mkdir -p /app/frontend/node_modules /app/__pycache__
 
-# Copy trained model weights (now available via Git LFS from repository)
-# Copy with shell commands to handle optional files gracefully
-RUN if [ -f runs/detect/train/weights/best.pt ]; then cp runs/detect/train/weights/best.pt /app/runs/detect/train/weights/; fi
-RUN if [ -f runs/detect/train/weights/last.pt ]; then cp runs/detect/train/weights/last.pt /app/runs/detect/train/weights/; fi
-RUN if [ -f runs/detect/train3/weights/best.pt ]; then cp runs/detect/train3/weights/best.pt /app/runs/detect/train3/weights/; fi
-RUN if [ -f runs/detect/train3/weights/last.pt ]; then cp runs/detect/train3/weights/last.pt /app/runs/detect/train3/weights/; fi
-RUN if [ -f segmentation_model/weights/best.pt ]; then cp segmentation_model/weights/best.pt /app/segmentation_model/weights/; fi
-RUN if [ -f segmentation_model/weights/last.pt ]; then cp segmentation_model/weights/last.pt /app/segmentation_model/weights/; fi
+# Copy trained model weights (tracked via Git LFS)
+COPY runs/detect/train/weights/best.pt /app/runs/detect/train/weights/ 2>/dev/null || true
+COPY runs/detect/train/weights/last.pt /app/runs/detect/train/weights/ 2>/dev/null || true
+COPY runs/detect/train3/weights/best.pt /app/runs/detect/train3/weights/ 2>/dev/null || true
+COPY runs/detect/train3/weights/last.pt /app/runs/detect/train3/weights/ 2>/dev/null || true
+COPY segmentation_model/weights/best.pt /app/segmentation_model/weights/ 2>/dev/null || true
+COPY segmentation_model/weights/last.pt /app/segmentation_model/weights/ 2>/dev/null || true
 
 # Expose port
 EXPOSE 7860
@@ -54,5 +56,5 @@ EXPOSE 7860
 # Set Flask app environment variable
 ENV FLASK_APP=finalwebapp_api.py
 
-# Run the app
+# Run the app (models will load if available in containers, or app will use defaults)
 CMD ["python", "-m", "flask", "run", "--host=0.0.0.0", "--port=7860"]
