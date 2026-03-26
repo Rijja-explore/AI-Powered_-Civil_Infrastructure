@@ -1,0 +1,6 @@
+# Build Trigger - Force Fresh Deploy
+# Updated: 2026-03-26 23:55
+# Latest Dockerfile fix: Removed failing COPY commands for runs/, segmentation_model/, frontend/
+# Docker now just creates empty directories - models load at runtime if available
+
+This ensures the Docker build will NOT fail on missing directories.
