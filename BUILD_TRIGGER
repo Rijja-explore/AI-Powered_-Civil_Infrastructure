@@ -1,0 +1,11 @@
+# Build Trigger
+# Last updated: 2026-03-26 23:45:00
+# This file forces a fresh build with the latest code
+# Ensures remote builders pick up all directory changes
+
+Current commit includes:
+- runs/ directory with README.md and .gitkeep
+- segmentation_model/ directory with README.md and .gitkeep  
+- frontend/ directory with README.md and .gitkeep
+- All model weights (best.pt, last.pt)
+- Optimized Dockerfile with proper COPY instructions
