@@ -30,13 +30,12 @@ COPY pdf_report.py .
 COPY segmentation_with_localisation.py .
 COPY image_3d_heightmap.py .
 
-# Copy trained models - CRITICAL for crack detection and segmentation
-# These directories must exist (may contain .gitkeep placeholder if empty in CI/CD)
+# Copy all other Python files
+COPY *.py ./
+
+# Copy trained models and frontend (these are tracked in git with .gitkeep to ensure they exist)
 COPY runs/ ./runs/
 COPY segmentation_model/ ./segmentation_model/
-
-# Copy any other Python files and static assets
-COPY *.py ./
 COPY frontend/ ./frontend/
 
 # Expose port
