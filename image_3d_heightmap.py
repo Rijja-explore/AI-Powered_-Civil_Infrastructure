@@ -44,41 +44,56 @@ def make_processed_image(input_path, resize_to=(300, 300)):
         combined: RGB image with heatmap + Canny edges overlay (final texture for 3D)
         gray: Grayscale version for heightmap Z-coordinate generation
     """
-    
-    # --- Load and resize image ---
-    img = Image.open(input_path).convert("RGB")
-    img = img.resize(resize_to, Image.LANCZOS)
-    img_np = np.array(img, dtype=np.uint8)    # (H, W, 3), uint8
+    try:
+        # --- Load and resize image ---
+        print(f"[3D] Loading image from: {input_path}")
+        img = Image.open(input_path).convert("RGB")
+        print(f"[3D] Original size: {img.size}")
+        
+        img = img.resize(resize_to, Image.LANCZOS)
+        print(f"[3D] Resized to: {img.size}")
+        img_np = np.array(img, dtype=np.uint8)    # (H, W, 3), uint8
+        print(f"[3D] Image array shape: {img_np.shape}")
 
-    # --- Convert to grayscale (used for both heatmap and heightmap) ---
-    gray = cv2.cvtColor(img_np, cv2.COLOR_RGB2GRAY)  # (H, W), uint8
+        # --- Convert to grayscale (used for both heatmap and heightmap) ---
+        gray = cv2.cvtColor(img_np, cv2.COLOR_RGB2GRAY)  # (H, W), uint8
+        print(f"[3D] Grayscale shape: {gray.shape}")
 
-    # --- Create colorful JET heatmap background ---
-    heatmap_bgr = cv2.applyColorMap(gray, cv2.COLORMAP_JET)   # BGR format from intensity
-    heatmap_rgb = cv2.cvtColor(heatmap_bgr, cv2.COLOR_BGR2RGB)  # Convert to RGB
+        # --- Create colorful JET heatmap background ---
+        heatmap_bgr = cv2.applyColorMap(gray, cv2.COLORMAP_JET)   # BGR format from intensity
+        heatmap_rgb = cv2.cvtColor(heatmap_bgr, cv2.COLOR_BGR2RGB)  # Convert to RGB
+        print(f"[3D] Heatmap created, shape: {heatmap_rgb.shape}")
 
-    # --- Detect Canny edges (sharp, high-contrast boundaries) ---
-    edges_binary = cv2.Canny(gray, 80, 160)   # (H, W), binary: 255 where edge, 0 elsewhere
+        # --- Detect Canny edges (sharp, high-contrast boundaries) ---
+        edges_binary = cv2.Canny(gray, 80, 160)   # (H, W), binary: 255 where edge, 0 elsewhere
+        print(f"[3D] Canny edges detected")
 
-    # --- Create edge overlay with magenta/purple tone for striking contrast ---
-    # Start with the heatmap as base
-    combined = heatmap_rgb.astype(np.float32)
-    
-    # Where edges exist, overlay with dark magenta/purple
-    # This creates the striking effect of dark lines over colored background
-    edge_mask = edges_binary / 255.0  # Convert to 0-1 range
-    edge_mask = edge_mask[:, :, np.newaxis]  # Add channel dimension (H, W, 1)
-    
-    # Define edge color: dark purple/magenta for maximum contrast
-    edge_color = np.array([80, 0, 150], dtype=np.float32)  # Dark purple: R=80, G=0, B=150
-    
-    # Blend: where edge_mask=1, use edge_color; where edge_mask=0, use heatmap
-    combined = combined * (1 - edge_mask) + edge_color * edge_mask
-    
-    # Clamp and convert back to uint8
-    combined = np.clip(combined, 0, 255).astype(np.uint8)
+        # --- Create edge overlay with magenta/purple tone for striking contrast ---
+        # Start with the heatmap as base
+        combined = heatmap_rgb.astype(np.float32)
+        
+        # Where edges exist, overlay with dark magenta/purple
+        # This creates the striking effect of dark lines over colored background
+        edge_mask = edges_binary / 255.0  # Convert to 0-1 range
+        edge_mask = edge_mask[:, :, np.newaxis]  # Add channel dimension (H, W, 1)
+        
+        # Define edge color: dark purple/magenta for maximum contrast
+        edge_color = np.array([80, 0, 150], dtype=np.float32)  # Dark purple: R=80, G=0, B=150
+        
+        # Blend: where edge_mask=1, use edge_color; where edge_mask=0, use heatmap
+        combined = combined * (1 - edge_mask) + edge_color * edge_mask
+        
+        # Clamp and convert back to uint8
+        combined = np.clip(combined, 0, 255).astype(np.uint8)
+        print(f"[3D] Combined image created, shape: {combined.shape}")
 
-    return combined, gray
+        return combined, gray
+    
+    except Exception as e:
+        print(f"[3D ERROR] Failed to process image: {e}")
+        import traceback
+        traceback.print_exc()
+        raise
 
 
 # ==============================================================
@@ -104,64 +119,88 @@ def make_3d_glb(
         smooth_sigma: Gaussian blur strength (0 = no smoothing)
         flip_y      : flip Y axis so mesh appears upright in many viewers
     """
+    try:
+        print(f"[3D] Starting 3D GLB creation...")
+        
+        # Ensure numpy arrays
+        gray = np.array(gray_img).astype(float)
+        color = np.array(color_img).astype(np.uint8)
+        
+        print(f"[3D] Gray array shape: {gray.shape}, dtype: {gray.dtype}")
+        print(f"[3D] Color array shape: {color.shape}, dtype: {color.dtype}")
 
-    # Ensure numpy arrays
-    gray = np.array(gray_img).astype(float)
-    color = np.array(color_img).astype(np.uint8)
+        h, w = gray.shape
+        assert color.shape[0] == h and color.shape[1] == w, \
+            f"gray_img and color_img must have same height/width. Got gray: {gray.shape}, color: {color.shape}"
 
-    h, w = gray.shape
-    assert color.shape[0] == h and color.shape[1] == w, \
-        "gray_img and color_img must have same height/width"
+        # --- Smooth height to reduce noise ---
+        if smooth_sigma > 0:
+            print(f"[3D] Applying Gaussian smoothing (σ={smooth_sigma})...")
+            gray = gaussian_filter(gray, sigma=smooth_sigma)
+            print(f"[3D] Smoothing complete")
 
-    # --- Smooth height to reduce noise ---
-    if smooth_sigma > 0:
-        gray = gaussian_filter(gray, sigma=smooth_sigma)
+        # --- Normalize height 0..1 ---
+        arr_min, arr_max = gray.min(), gray.max()
+        print(f"[3D] Height range: [{arr_min:.2f}, {arr_max:.2f}]")
+        norm = (gray - arr_min) / (arr_max - arr_min + 1e-9)
+        height = norm * height_scale
+        print(f"[3D] Normalized height range: [{height.min():.2f}, {height.max():.2f}]")
 
-    # --- Normalize height 0..1 ---
-    arr_min, arr_max = gray.min(), gray.max()
-    norm = (gray - arr_min) / (arr_max - arr_min + 1e-9)
-    height = norm * height_scale
+        # --- Create vertices (grid) ---
+        print(f"[3D] Creating vertex grid ({h}x{w})...")
+        verts = np.zeros((h * w, 3), dtype=float)
+        for y in range(h):
+            for x in range(w):
+                z = float(height[y, x])
+                idx = y * w + x
+                if flip_y:
+                    verts[idx] = [x, (h - 1 - y), z]
+                else:
+                    verts[idx] = [x, y, z]
+        print(f"[3D] Vertices created: {verts.shape}")
 
-    # --- Create vertices (grid) ---
-    verts = np.zeros((h * w, 3), dtype=float)
-    for y in range(h):
-        for x in range(w):
-            z = float(height[y, x])
-            idx = y * w + x
-            if flip_y:
-                verts[idx] = [x, (h - 1 - y), z]
-            else:
-                verts[idx] = [x, y, z]
+        # --- Create faces (two triangles per pixel-square) ---
+        print(f"[3D] Creating face indices...")
+        faces = []
+        for y in range(h - 1):
+            for x in range(w - 1):
+                i = y * w + x
+                a = i
+                b = i + 1
+                c = i + w
+                d = i + w + 1
+                faces.append([a, b, c])
+                faces.append([b, d, c])
+        faces = np.array(faces, dtype=np.int64)
+        print(f"[3D] Faces created: {faces.shape}")
 
-    # --- Create faces (two triangles per pixel-square) ---
-    faces = []
-    for y in range(h - 1):
-        for x in range(w - 1):
-            i = y * w + x
-            a = i
-            b = i + 1
-            c = i + w
-            d = i + w + 1
-            faces.append([a, b, c])
-            faces.append([b, d, c])
-    faces = np.array(faces, dtype=np.int64)
+        # --- Flatten color image into vertex colors (RGBA) ---
+        print(f"[3D] Creating vertex colors...")
+        color_flat = color.reshape(-1, 3)                 # (N, 3)
+        alpha = np.full((color_flat.shape[0], 1), 255,
+                        dtype=np.uint8)                   # (N, 1)
+        colors = np.hstack([color_flat, alpha])           # (N, 4)
+        print(f"[3D] Vertex colors created: {colors.shape}")
 
-    # --- Flatten color image into vertex colors (RGBA) ---
-    color_flat = color.reshape(-1, 3)                 # (N, 3)
-    alpha = np.full((color_flat.shape[0], 1), 255,
-                    dtype=np.uint8)                   # (N, 1)
-    colors = np.hstack([color_flat, alpha])           # (N, 4)
+        # --- Build mesh & export GLB ---
+        print(f"[3D] Building trimesh object...")
+        mesh = trimesh.Trimesh(
+            vertices=verts,
+            faces=faces,
+            vertex_colors=colors,
+            process=False
+        )
+        print(f"[3D] Mesh created: {mesh}")
 
-    # --- Build mesh & export GLB ---
-    mesh = trimesh.Trimesh(
-        vertices=verts,
-        faces=faces,
-        vertex_colors=colors,
-        process=False
-    )
-
-    mesh.export(output_path)
-    print(f"[INFO] Saved 3D GLB model to: {os.path.abspath(output_path)}")
+        print(f"[3D] Exporting to GLB format: {output_path}")
+        mesh.export(output_path)
+        print(f"[INFO] Saved 3D GLB model to: {os.path.abspath(output_path)}")
+    
+    except Exception as e:
+        print(f"[3D ERROR] Failed to create 3D GLB: {e}")
+        import traceback
+        traceback.print_exc()
+        raise
 
 
 # ==============================================================
@@ -188,23 +227,38 @@ def generate_3d_glb_from_image(
     Returns:
         output_glb_path: Path to generated file
     """
-    # Process image (creates overlay + grayscale)
-    combined, gray = make_processed_image(
-        input_image_path,
-        resize_to=resize_to
-    )
+    try:
+        print(f"[3D] Starting 3D GLB generation from image")
+        print(f"[3D] Input: {input_image_path}")
+        print(f"[3D] Output: {output_glb_path}")
+        
+        # Process image (creates overlay + grayscale)
+        print(f"[3D] Step 1: Processing image...")
+        combined, gray = make_processed_image(
+            input_image_path,
+            resize_to=resize_to
+        )
+        print(f"[3D] Step 1 complete: combined shape={combined.shape}, gray shape={gray.shape}")
+        
+        # Generate 3D model with vertex colors
+        print(f"[3D] Step 2: Generating 3D model...")
+        make_3d_glb(
+            gray,
+            combined,
+            output_path=output_glb_path,
+            height_scale=height_scale,
+            smooth_sigma=smooth_sigma,
+            flip_y=True
+        )
+        print(f"[3D] Step 2 complete: GLB exported")
+        
+        return output_glb_path
     
-    # Generate 3D model with vertex colors
-    make_3d_glb(
-        gray,
-        combined,
-        output_path=output_glb_path,
-        height_scale=height_scale,
-        smooth_sigma=smooth_sigma,
-        flip_y=True
-    )
-    
-    return output_glb_path
+    except Exception as e:
+        print(f"[3D ERROR] Failed to generate 3D GLB from image: {e}")
+        import traceback
+        traceback.print_exc()
+        raise
 
 
 def generate_3d_glb_from_arrays(

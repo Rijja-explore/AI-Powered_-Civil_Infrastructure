@@ -2655,8 +2655,14 @@ def generate_3d_glb():
     Returns: GLB binary file
     """
     try:
+        print(f"📥 Received 3D GLB generation request")
+        print(f"   - HEIGHTMAP_GLB_AVAILABLE: {HEIGHTMAP_GLB_AVAILABLE}")
+        print(f"   - generate_3d_glb_from_image: {generate_3d_glb_from_image}")
+        
         if not HEIGHTMAP_GLB_AVAILABLE or generate_3d_glb_from_image is None:
-            return jsonify({'error': 'GLB generator not available on server'}), 500
+            error_msg = '3D model generation dependencies not available. Please ensure trimesh, scipy, opencv-python are installed.'
+            print(f"❌ {error_msg}")
+            return jsonify({'error': error_msg}), 500
         
         # Check if image file is provided
         if 'image' not in request.files:
@@ -2667,18 +2673,30 @@ def generate_3d_glb():
             return jsonify({'error': 'No file selected'}), 400
         
         # Get optional parameters
-        resize_to = int(request.args.get('resize_to', 300))
-        height_scale = float(request.args.get('height_scale', 12.0))
-        smooth_sigma = float(request.args.get('smooth_sigma', 1.2))
+        try:
+            resize_to = int(request.args.get('resize_to', 300))
+            height_scale = float(request.args.get('height_scale', 12.0))
+            smooth_sigma = float(request.args.get('smooth_sigma', 1.2))
+            print(f"   - Parameters: resize={resize_to}, height_scale={height_scale}, sigma={smooth_sigma}")
+        except ValueError as e:
+            return jsonify({'error': f'Invalid parameter format: {str(e)}'}), 400
         
-        # Save uploaded file temporarily
-        uploads_dir = 'uploads'
+        # Save uploaded file temporarily in a safe location
+        uploads_dir = os.path.join(os.path.dirname(__file__), 'uploads')
         os.makedirs(uploads_dir, exist_ok=True)
         
         temp_filename = f"temp_{uuid.uuid4().hex}.png"
         temp_path = os.path.join(uploads_dir, temp_filename)
+        
+        print(f"   - Saving uploaded file to: {temp_path}")
         file.save(temp_path)
         
+        # Verify file was saved
+        if not os.path.exists(temp_path):
+            raise Exception(f"Failed to save uploaded file to {temp_path}")
+        print(f"   - File saved successfully ({os.path.getsize(temp_path)} bytes)")
+        
+        glb_path = None
         try:
             # Generate GLB from image
             glb_filename = f"heightmap_{uuid.uuid4().hex}.glb"
@@ -2686,6 +2704,7 @@ def generate_3d_glb():
             
             print(f"🔄 Generating 3D GLB model...")
             print(f"   - Input: {temp_path}")
+            print(f"   - Output: {glb_path}")
             print(f"   - Resize: {resize_to}x{resize_to}")
             print(f"   - Height scale: {height_scale}")
             print(f"   - Smoothing: σ={smooth_sigma}")
@@ -2698,7 +2717,12 @@ def generate_3d_glb():
                 smooth_sigma=smooth_sigma
             )
             
-            print(f"✅ 3D GLB generated successfully: {glb_path}")
+            # Verify GLB was created
+            if not os.path.exists(glb_path):
+                raise Exception(f"GLB generation completed but file not found at {glb_path}")
+            
+            glb_size = os.path.getsize(glb_path)
+            print(f"✅ 3D GLB generated successfully: {glb_path} ({glb_size} bytes)")
             
             # Send the GLB file
             return send_file(
@@ -2708,16 +2732,26 @@ def generate_3d_glb():
                 download_name='heightmap.glb'
             )
         
+        except Exception as gen_error:
+            print(f"❌ GLB generation failed: {gen_error}")
+            import traceback
+            traceback.print_exc()
+            return jsonify({'error': f'Failed to generate 3D model: {str(gen_error)}'}), 500
+        
         finally:
             # Clean up temporary image file
             if os.path.exists(temp_path):
-                os.remove(temp_path)
+                try:
+                    os.remove(temp_path)
+                    print(f"   - Cleaned up temp file: {temp_path}")
+                except Exception as cleanup_error:
+                    print(f"   - Warning: Could not delete temp file {temp_path}: {cleanup_error}")
     
     except Exception as e:
-        print(f"❌ 3D GLB generation error: {e}")
+        print(f"❌ Unexpected error in 3D GLB generation: {e}")
         import traceback
         traceback.print_exc()
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': f'Server error: {str(e)}'}), 500
 
         
 if __name__ == '__main__':
