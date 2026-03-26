@@ -166,10 +166,50 @@ with warnings.catch_warnings():
         traceback.print_exc()
         # Create stub functions to prevent crashes
         def detect_with_yolo(image_np, px_to_cm_ratio=0.1, model=None):
-            """Basic crack detection using edge detection"""
+            """Crack detection using YOLO model or fallback to edge detection"""
             if image_np is None:
                 return np.zeros((480, 640, 3), dtype=np.uint8), []
             try:
+                # Use provided model or fallback
+                if model is not None and YOLO is not None:
+                    try:
+                        image_rgb = cv2.cvtColor(image_np, cv2.COLOR_BGR2RGB) if cv2 else image_np
+                        results = model.predict(image_rgb, conf=0.3)
+                        crack_details = []
+                        annotated = image_np.copy()
+                        
+                        for result in results:
+                            if result.boxes is not None and len(result.boxes) > 0:
+                                for box in result.boxes:
+                                    x1, y1, x2, y2 = box.xyxy[0].cpu().numpy().astype(int)
+                                    width_px = x2 - x1
+                                    length_px = y2 - y1
+                                    width_cm = width_px * px_to_cm_ratio
+                                    length_cm = length_px * px_to_cm_ratio
+                                    
+                                    class_id = int(box.cls[0].cpu().numpy())
+                                    label = model.names.get(class_id, "unknown")
+                                    confidence = float(box.conf[0].cpu().numpy())
+                                    severity = 'Moderate' if (width_cm + length_cm) / 2 > 5 else 'Minor'
+                                    
+                                    crack_details.append({
+                                        'width_cm': width_cm,
+                                        'length_cm': length_cm,
+                                        'severity': severity,
+                                        'confidence': confidence,
+                                        'label': label,
+                                        'bbox': (x1, y1, x2, y2)
+                                    })
+                                    
+                                    color = (0, 255, 0) if severity == 'Minor' else (0, 165, 255) if severity == 'Moderate' else (255, 0, 0)
+                                    cv2.rectangle(annotated, (x1, y1), (x2, y2), color, 3)
+                                    cv2.putText(annotated, f"{label} ({confidence:.2f})", (x1, y1-10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
+                        
+                        return annotated, crack_details if crack_details else [{'width_cm': 0, 'length_cm': 0, 'severity': 'None', 'confidence': 0, 'label': 'No detection', 'bbox': (0, 0, 0, 0)}]
+                    except Exception as e:
+                        print(f"⚠️ YOLO prediction failed, using edge detection fallback: {e}")
+                
+                # Fallback to edge detection
                 annotated = image_np.copy()
                 gray = cv2.cvtColor(image_np, cv2.COLOR_BGR2GRAY) if cv2 else image_np[:,:,0] if len(image_np.shape) > 2 else image_np
                 edges = cv2.Canny(gray, 50, 150) if cv2 else gray
@@ -181,34 +221,64 @@ with warnings.catch_warnings():
                         x, y, w, h = cv2.boundingRect(cnt) if cv2 else (0, 0, 10, 10)
                         if cv2:
                             cv2.rectangle(annotated, (x, y), (x+w, y+h), (0, 255, 0), 2)
-                            cv2.putText(annotated, f"Crack {i+1}", (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+                            cv2.putText(annotated, f"Edge {i+1}", (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
                         crack_details.append({
                             'width_cm': w * px_to_cm_ratio, 'length_cm': h * px_to_cm_ratio, 'severity': 'Moderate' if area > 500 else 'Minor',
-                            'confidence': 0.75 + (min(area, 1000) / 1000) * 0.2, 'label': 'crack', 'bbox': (x, y, x+w, y+h)
+                            'confidence': 0.75 + (min(area, 1000) / 1000) * 0.2, 'label': 'edge', 'bbox': (x, y, x+w, y+h)
                         })
                 return annotated, crack_details if crack_details else [{'width_cm': 0, 'length_cm': 0, 'severity': 'None', 'confidence': 0, 'label': 'No detection', 'bbox': (0, 0, 0, 0)}]
             except Exception as e:
-                print(f"Error in stub detect_with_yolo: {e}")
+                print(f"Error in detect_with_yolo: {e}")
                 return image_np.copy(), [{'width_cm': 0, 'length_cm': 0, 'severity': 'None', 'confidence': 0, 'label': 'No detection', 'bbox': (0, 0, 0, 0)}]
         def detect_biological_growth(image_np, crack_details):
-            """Basic biological growth detection using HSV color analysis"""
+            """Enhanced biological growth detection using HSV color analysis"""
             if image_np is None:
                 return {'growth_detected': False, 'growth_percentage': 0.0, 'affected_area_cm2': 0.0}, np.zeros((480, 640, 3), dtype=np.uint8)
             try:
                 growth_image = image_np.copy()
                 if cv2:
                     hsv = cv2.cvtColor(image_np, cv2.COLOR_BGR2HSV)
-                    lower_green = np.array([35, 50, 50])
-                    upper_green = np.array([85, 255, 255])
+                    
+                    # Detect green growth (moss, algae, vegetation)
+                    lower_green = np.array([25, 40, 40])
+                    upper_green = np.array([90, 255, 255])
                     green_mask = cv2.inRange(hsv, lower_green, upper_green)
-                    growth_percentage = (np.sum(green_mask > 0) / (image_np.shape[0] * image_np.shape[1])) * 100
-                    growth_image[green_mask > 0] = [0, 255, 0]
+                    
+                    # Detect yellow/brown decay (oxidation, mineral deposits)
+                    lower_brown = np.array([10, 50, 80])
+                    upper_brown = np.array([25, 255, 255])
+                    brown_mask = cv2.inRange(hsv, lower_brown, upper_brown)
+                    
+                    # Combine masks
+                    combined_mask = cv2.bitwise_or(green_mask, brown_mask)
+                    
+                    # Morphological operations to clean up
+                    kernel = np.ones((5, 5), np.uint8)
+                    cleaned_mask = cv2.morphologyEx(combined_mask, cv2.MORPH_CLOSE, kernel)
+                    cleaned_mask = cv2.morphologyEx(cleaned_mask, cv2.MORPH_OPEN, kernel)
+                    
+                    # Calculate growth percentage
+                    total_pixels = image_np.shape[0] * image_np.shape[1]
+                    growth_pixels = np.sum(cleaned_mask > 0)
+                    growth_percentage = (growth_pixels / total_pixels) * 100 if total_pixels > 0 else 0
+                    
+                    # Create visualization with contours
+                    growth_image[cleaned_mask > 0] = [0, 255, 0]  # Green overlay
+                    
+                    # Draw contours
+                    contours, _ = cv2.findContours(cleaned_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                    cv2.drawContours(growth_image, contours, -1, (0, 165, 255), 2)
                 else:
                     growth_percentage = 0
-                growth_analysis = {'growth_detected': growth_percentage > 1.0, 'growth_percentage': round(growth_percentage, 2), 'affected_area_cm2': round(growth_percentage * 10, 2)}
+                
+                growth_analysis = {
+                    'growth_detected': growth_percentage > 0.5,  # Lower threshold for detection
+                    'growth_percentage': round(growth_percentage, 2),
+                    'affected_area_cm2': round(growth_percentage * 10, 2)
+                }
                 return growth_analysis, growth_image
             except Exception as e:
-                print(f"Error in stub detect_biological_growth: {e}")
+                print(f"Error in detect_biological_growth: {e}")
                 return {'growth_detected': False, 'growth_percentage': 0.0, 'affected_area_cm2': 0.0}, image_np.copy()
         def detect_biological_growth_advanced(image_np):
             """Advanced biological growth detection"""
@@ -238,28 +308,38 @@ with warnings.catch_warnings():
             if image_np is None:
                 return np.zeros((480, 640, 3), dtype=np.uint8), None
             try:
-                if cv2 and YOLO is not None:
-                    from ultralytics import YOLO as YOLOModel
-                    seg_model = YOLOModel("./segmentation_model/weights/best.pt") if model is None else model
-                    image_rgb = cv2.cvtColor(image_np, cv2.COLOR_BGR2RGB)
-                    results = seg_model.predict(source=image_rgb, conf=0.3, save=False)
-                    segmented_image = results[0].plot()
-                    segmented_image_bgr = cv2.cvtColor(segmented_image, cv2.COLOR_RGB2BGR)
-                    return segmented_image_bgr, results
-                else:
-                    # Fallback to edge detection if models unavailable
-                    gray = cv2.cvtColor(image_np, cv2.COLOR_BGR2GRAY) if cv2 else image_np[:,:,0] if len(image_np.shape) > 2 else image_np
-                    edges = cv2.Canny(gray, 50, 150) if cv2 else gray
-                    segmented = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR) if cv2 else edges
-                    segmented[edges > 0] = [255, 0, 0] if cv2 else segments
+                # Use provided segmentation model
+                if model is not None and YOLO is not None and cv2:
+                    try:
+                        image_rgb = cv2.cvtColor(image_np, cv2.COLOR_BGR2RGB)
+                        results = model.predict(source=image_rgb, conf=0.3, save=False)
+                        if results and len(results) > 0:
+                            segmented_image = results[0].plot()
+                            segmented_image_bgr = cv2.cvtColor(segmented_image, cv2.COLOR_RGB2BGR)
+                            return segmented_image_bgr, results
+                    except Exception as e:
+                        print(f"⚠️ Segmentation model prediction failed: {e}")
+                
+                # Fallback to edge-based segmentation
+                if cv2:
+                    gray = cv2.cvtColor(image_np, cv2.COLOR_BGR2GRAY)
+                    edges = cv2.Canny(gray, 50, 150)
+                    kernel = np.ones((5, 5), np.uint8)
+                    closed = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
+                    segmented = np.zeros_like(image_np)
+                    segmented[closed > 0] = [0, 255, 255]  # Cyan for damage
                     return segmented, None
+                else:
+                    return image_np.copy(), None
             except Exception as e:
                 print(f"Error in segment_image: {e}")
                 try:
-                    # Fallback segmentation
-                    gray = cv2.cvtColor(image_np, cv2.COLOR_BGR2GRAY) if cv2 else image_np
-                    edges = cv2.Canny(gray, 50, 150) if cv2 else gray
-                    return cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR) if cv2 else edges, None
+                    if cv2:
+                        gray = cv2.cvtColor(image_np, cv2.COLOR_BGR2GRAY)
+                        edges = cv2.Canny(gray, 50, 150)
+                        return cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR), None
+                    else:
+                        return image_np.copy(), None
                 except:
                     return image_np.copy(), None
         def preprocess_image_for_depth_estimation(image_np):
@@ -470,19 +550,23 @@ try:
     yolo_path = "runs/detect/train3/weights/best.pt"
     if os.path.exists(yolo_path):
         YOLO_MODEL = YOLO(yolo_path)
-        yolo_status = f"Custom model loaded from {yolo_path}"
+        yolo_status = f"✅ Trained crack detection model loaded from {yolo_path}"
+        print(yolo_status)
     else:
         YOLO_MODEL = YOLO("yolov8n.pt")
-        yolo_status = "Using default YOLOv8n model"
+        yolo_status = "⚠️ Using default YOLOv8n model (not trained for crack detection)"
+        print(yolo_status)
 
     # Load segmentation model
-    seg_path = "./segmentation_model/weights/best.pt"
+    seg_path = "segmentation_model/weights/best.pt"
     if os.path.exists(seg_path):
         SEGMENTATION_MODEL = YOLO(seg_path)
-        seg_status = f"Custom segmentation model loaded from {seg_path}"
+        seg_status = f"✅ Segmentation model loaded from {seg_path}"
+        print(seg_status)
     else:
         SEGMENTATION_MODEL = YOLO("yolov8n-seg.pt")
-        seg_status = "Using default YOLOv8n-seg model"
+        seg_status = "⚠️ Using default YOLOv8n-seg model"
+        print(seg_status)
 
     # Load material model
     if TORCH_AVAILABLE and models is not None:
@@ -496,9 +580,6 @@ try:
     else:
         MATERIAL_MODEL = None
         material_status = "Material model not available (PyTorch required)"
-
-    yolo_status = "YOLO model not loaded (cv2/ultralytics unavailable)"
-    seg_status = "Segmentation model not loaded (cv2/ultralytics unavailable)"
     
     MODELS_STATUS = {
         'yolo': yolo_status,
