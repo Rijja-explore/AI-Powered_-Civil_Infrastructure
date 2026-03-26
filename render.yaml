@@ -3,7 +3,6 @@ services:
   - type: web
     name: infravision-ai-backend
     env: python
-    pythonVersion: 3.11
     plan: starter
     buildCommand: pip install --prefer-binary -r requirements.txt
     startCommand: gunicorn -w 4 -b 0.0.0.0:$PORT finalwebapp_api:app
@@ -14,7 +13,7 @@ services:
       - key: FLASK_DEBUG
         value: "False"
       - key: SECRET_KEY
-        fromFile: render.secret
+        value: your-secret-key-here
       - key: CORS_ORIGINS
         value: https://infravision-ai-frontend.onrender.com
       - key: MAX_CONTENT_LENGTH
@@ -24,13 +23,8 @@ services:
       - key: USE_GPU
         value: "False"
     
-    regions:
-      - us-east
     autoDeploy: true
-    branch: main
-    healthCheckPath: /api/health
-    preDeployCommand: |
-      pip install gunicorn python-dotenv
+    region: us-east
 
   # PostgreSQL Database (Optional)
   # Uncomment to use database
