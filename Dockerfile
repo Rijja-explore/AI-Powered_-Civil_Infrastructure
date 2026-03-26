@@ -33,10 +33,13 @@ COPY image_3d_heightmap.py .
 # Copy all other Python files
 COPY *.py ./
 
-# Copy trained models and frontend (these are tracked in git with .gitkeep to ensure they exist)
-COPY runs/ ./runs/
-COPY segmentation_model/ ./segmentation_model/
-COPY frontend/ ./frontend/
+# Create necessary directory structure for models and frontend
+# Docker build context may not include these directories (they may need to be loaded separately)
+# The application will check these directories at runtime and load models if available
+RUN mkdir -p /app/runs/detect/train/weights /app/runs/detect/train3/weights && \
+    mkdir -p /app/segmentation_model/weights && \
+    mkdir -p /app/frontend/src /app/frontend/public && \
+    mkdir -p /app/frontend/node_modules /app/__pycache__
 
 # Expose port
 EXPOSE 7860
