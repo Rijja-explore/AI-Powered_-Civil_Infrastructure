@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Camera, Upload, Activity, BarChart3, Leaf, AlertTriangle, Download, Settings, Play, Video, Wifi, TrendingUp, Droplet, Wind, Zap, CheckCircle, XCircle, Loader } from 'lucide-react';
+import { API_URL } from '../config/apiConfig';
 import ImageAnalysis from '../pages/ImageAnalysis';
 import ImageInsights from '../pages/ImageInsights';
 
@@ -21,8 +22,6 @@ const MainDashboard = () => {
     confidenceThreshold: 0.3,
     pixelToCmRatio: 0.1
   });
-
-  const API_URL = 'http://localhost:5002';
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);

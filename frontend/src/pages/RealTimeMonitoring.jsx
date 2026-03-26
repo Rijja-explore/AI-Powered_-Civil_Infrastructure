@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { API_URL } from '../config/apiConfig';
 import { 
   Activity, 
   Video, 
@@ -34,7 +35,7 @@ const RealTimeMonitoring = () => {
 
   const connectToCamera = async () => {
     try {
-      const response = await fetch('http://localhost:5002/api/connect_camera', {
+      const response = await fetch(`${API_URL}/api/connect_camera`, {
         method: 'POST'
       });
       const data = await response.json();

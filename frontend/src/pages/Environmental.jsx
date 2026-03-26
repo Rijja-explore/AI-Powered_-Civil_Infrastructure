@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_URL } from '../config/apiConfig';
 import { Leaf, Wind, Droplet, Zap, BarChart3, TrendingUp, AlertTriangle, CheckCircle } from 'lucide-react';
 
 const Environmental = () => {
@@ -31,7 +32,7 @@ const Environmental = () => {
     setLoading(true);
     try {
       // Try to fetch from backend API first
-      const response = await fetch('http://localhost:5002/api/analyze', {
+      const response = await fetch(`${API_URL}/api/analyze`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAnalysis } from '../contexts/AnalysisContext';
+import { API_URL } from '../config/apiConfig';
 import { Camera, Upload, Play, Loader, PieChart, Target, Activity, TrendingUp, CheckCircle, AlertTriangle, BarChart3, Wind, Droplet, Zap, Leaf, Download, Shield } from 'lucide-react';
 
 const ImageAnalysis = () => {
@@ -18,8 +19,6 @@ const ImageAnalysis = () => {
     confidenceThreshold: 0.3,
     pixelToCmRatio: 0.1
   });
-
-  const API_URL = 'http://localhost:5002';
 
   // Load saved image and results on component mount and when context changes
   useEffect(() => {

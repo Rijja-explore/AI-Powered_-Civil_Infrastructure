@@ -2,6 +2,7 @@
 // // import { Canvas } from "@react-three/fiber";
 // // import { OrbitControls } from "@react-three/drei";
 // // import * as THREE from "three";
+// // import { API_URL } from "../config/apiConfig";
 // // import { Box, Upload, RotateCw, Settings2, Zap } from "lucide-react";
 // // import "../styles/heightmap3d.css";
 
@@ -1313,7 +1314,7 @@ export default function Heightmap3D() {
 
       const endpoint = useGLB ? "/api/generate-3d-glb" : "/api/generate-3d-heightmap";
       
-      let url = `http://localhost:5002${endpoint}`;
+      let url = `${API_URL}${endpoint}`;
       if (useGLB) {
         const params = new URLSearchParams({
           resize_to: settings.resize_to,
