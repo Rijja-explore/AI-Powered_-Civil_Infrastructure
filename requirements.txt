@@ -20,9 +20,9 @@ scikit-image>=0.21.0
 imutils>=0.5.4
 
 # ==================== OBJECT DETECTION (YOLOv8) ====================
-ultralytics>=8.0.34,<8.1.0
-torch>=2.0.0,<2.2.0
-torchvision>=0.15.0,<0.17.0
+ultralytics>=8.1.0
+torch>=2.9.0
+torchvision>=0.18.0
 
 # ==================== DATA SCIENCE & ANALYTICS ====================
 numpy>=1.25.0,<1.27.0
