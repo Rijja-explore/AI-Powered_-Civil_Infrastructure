@@ -54,5 +54,10 @@ EXPOSE 7860
 # Set Flask app environment variable
 ENV FLASK_APP=finalwebapp_api.py
 
-# Run the app (models will load if available in containers, or app will use defaults)
-CMD ["python", "-m", "flask", "run", "--host=0.0.0.0", "--port=7860"]
+# Copy startup script and make it executable
+COPY startup.sh /app/
+RUN chmod +x /app/startup.sh
+
+# Run the app through startup script
+# Models will load if available, or app will use defaults with graceful fallback
+CMD ["/app/startup.sh"]
