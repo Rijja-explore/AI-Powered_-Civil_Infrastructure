@@ -24,7 +24,14 @@ COPY finalwebapp.py .
 COPY pdf_report.py .
 COPY segmentation_with_localisation.py .
 COPY image_3d_heightmap.py .
-COPY . .
+
+# Copy trained models - CRITICAL for crack detection and segmentation
+COPY runs/ ./runs/
+COPY segmentation_model/ ./segmentation_model/
+
+# Copy any other Python files and static assets
+COPY *.py ./
+COPY frontend/ ./frontend/
 
 # Expose port
 EXPOSE 7860
