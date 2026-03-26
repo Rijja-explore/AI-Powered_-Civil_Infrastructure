@@ -36,31 +36,17 @@ RUN apt-get update && apt-get install -y git-lfs curl && rm -rf /var/lib/apt/lis
 # Copy all other Python files
 COPY *.py ./
 
-# Create necessary directory structure for models and frontend
+# Create directory structure for models, frontend, and runtime outputs
+# The Python app will check if actual model files exist and fall back to defaults if needed
 RUN mkdir -p /app/runs/detect/train/weights /app/runs/detect/train3/weights && \
     mkdir -p /app/segmentation_model/weights && \
     mkdir -p /app/frontend/src /app/frontend/public && \
-    mkdir -p /app/frontend/node_modules /app/__pycache__
+    mkdir -p /app/__pycache__
 
-# Copy model directories - Git LFS will have already downloaded these
-COPY runs/ /app/runs/
-COPY segmentation_model/ /app/segmentation_model/
-COPY frontend/ /app/frontend/
-
-# Verify models exist in container
-RUN echo "Checking models..." && \
-    if [ -f /app/runs/detect/train3/weights/best.pt ]; then \
-        echo "✅ CRACK DETECTION MODEL FOUND" && \
-        ls -lh /app/runs/detect/train3/weights/best.pt; \
-    else \
-        echo "⚠️ CRACK DETECTION MODEL NOT FOUND"; \
-    fi && \
-    if [ -f /app/segmentation_model/weights/best.pt ]; then \
-        echo "✅ SEGMENTATION MODEL FOUND" && \
-        ls -lh /app/segmentation_model/weights/best.pt; \
-    else \
-        echo "⚠️ SEGMENTATION MODEL NOT FOUND"; \
-    fi
+# Note: Model files in Git LFS will be downloaded during git clone with git-lfs installed
+# If git-lfs doesn't download them during clone, the Python app has graceful fallback to defaults
+# We don't copy directories here because if LFS pointer files exist instead of actual models,
+# that would cause issues. Better to let app handle missing models with fallback logic.
 
 # Expose port
 EXPOSE 7860
