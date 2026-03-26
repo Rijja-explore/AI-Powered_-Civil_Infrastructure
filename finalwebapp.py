@@ -81,51 +81,90 @@ except ImportError as e:
         buffer.seek(0)
         return buffer
 
-# Model loading - only when running as main script
+# Model loading - load regardless of import/main context
+def load_models_for_api():
+    """Load models for use in API and Streamlit"""
+    yolo_model = None
+    segmentation_model = None
+    material_model = None
+    models_status = {}
+    
+    try:
+        # Get base directory for model paths
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        
+        # Load YOLO crack detection model
+        yolo_path = os.path.join(script_dir, "runs/detect/train3/weights/best.pt")
+        if os.path.exists(yolo_path):
+            try:
+                yolo_model = YOLO(yolo_path)
+                models_status['yolo'] = f"✅ Trained crack detection model loaded ({os.path.getsize(yolo_path)/1e6:.1f}MB)"
+                print(f"✅ Loaded crack detection model from: {yolo_path}")
+            except Exception as e:
+                print(f"⚠️ Failed to load trained model {yolo_path}: {e}")
+                yolo_model = YOLO("yolov8n.pt")
+                models_status['yolo'] = f"⚠️ Fallback to yolov8n: {e}"
+        else:
+            print(f"⚠️ Model path not found: {yolo_path}")
+            yolo_model = YOLO("yolov8n.pt")
+            models_status['yolo'] = f"⚠️ Trained model not found, using yolov8n"
+
+        # Load segmentation model
+        seg_path = os.path.join(script_dir, "segmentation_model/weights/best.pt")
+        if os.path.exists(seg_path):
+            try:
+                segmentation_model = YOLO(seg_path)
+                models_status['segmentation'] = f"✅ Segmentation model loaded ({os.path.getsize(seg_path)/1e6:.1f}MB)"
+                print(f"✅ Loaded segmentation model from: {seg_path}")
+            except Exception as e:
+                print(f"⚠️ Failed to load segmentation model {seg_path}: {e}")
+                segmentation_model = YOLO("yolov8n-seg.pt")
+                models_status['segmentation'] = f"⚠️ Fallback to yolov8n-seg: {e}"
+        else:
+            print(f"⚠️ Model path not found: {seg_path}")
+            segmentation_model = YOLO("yolov8n-seg.pt")
+            models_status['segmentation'] = f"⚠️ Model not found, using yolov8n-seg"
+
+        # Load material classification model
+        if TORCH_AVAILABLE and models is not None:
+            try:
+                material_model = models.mobilenet_v2(weights='IMAGENET1K_V1')
+                material_model.classifier = nn.Sequential(
+                    nn.Dropout(0.2),
+                    nn.Linear(material_model.last_channel, 8)
+                )
+                material_model.eval()
+                models_status['material'] = "✅ Material classifier loaded"
+                print("✅ Loaded material classification model")
+            except Exception as e:
+                print(f"⚠️ Failed to load material model: {e}")
+                material_model = None
+                models_status['material'] = f"⚠️ Material model failed: {e}"
+        else:
+            models_status['material'] = "⚠️ PyTorch not available for material model"
+            
+        return yolo_model, segmentation_model, material_model, models_status
+    except Exception as e:
+        print(f"❌ Model loading error: {e}")
+        import traceback
+        traceback.print_exc()
+        return None, None, None, {'error': str(e)}
+
+# Load models at module import time
+print("📦 Loading models at module import time...")
+yolo_model, segmentation_model, material_model, MODELS_INIT_STATUS = load_models_for_api()
+
+# Keep old function for Streamlit compatibility
 if __name__ == "__main__":
     @st.cache_resource
     def load_models():
-        models_status = {}
-        try:
-            yolo_path = "runs/detect/train3/weights/best.pt"
-            if os.path.exists(yolo_path):
-                yolo_model = YOLO(yolo_path)
-                models_status['yolo'] = f"Custom model loaded from {yolo_path}"
-            else:
-                yolo_model = YOLO("yolov8n.pt")
-                models_status['yolo'] = "Using default YOLOv8n model"
-
-            seg_path = "./segmentation_model/weights/best.pt"
-            if os.path.exists(seg_path):
-                segmentation_model = YOLO(seg_path)
-                models_status['segmentation'] = f"Custom segmentation model loaded from {seg_path}"
-            else:
-                segmentation_model = YOLO("yolov8n-seg.pt")
-                models_status['segmentation'] = "Using default YOLOv8n-seg model"
-
-            material_model = models.mobilenet_v2(weights='IMAGENET1K_V1')
-            material_model.classifier = nn.Sequential(
-                nn.Dropout(0.2),
-                nn.Linear(material_model.last_channel, 8)
-            )
-            material_model.eval()
-            models_status['material'] = "MobileNetV2 model loaded with custom classifier for 8 material types"
-
+        """Streamlit-cached model loading"""
+        if yolo_model and segmentation_model:
             st.success("✅ All models loaded successfully!")
             with st.expander("Model Loading Details"):
-                for model_type, status in models_status.items():
+                for model_type, status in MODELS_INIT_STATUS.items():
                     st.info(f"{model_type.capitalize()}: {status}")
-
-            return yolo_model, segmentation_model, material_model
-        except Exception as e:
-            st.error(f"❌ Model loading failed: {str(e)}")
-            st.warning("⚠ Some features may not work properly without models.")
-            return None, None, None
-
-    yolo_model, segmentation_model, material_model = load_models()
-else:
-    # When imported as module, load models without streamlit decorators
-    yolo_model, segmentation_model, material_model = None, None, None
+        return yolo_model, segmentation_model, material_model
 
 # Image processing functions
 def load_and_preprocess_image(uploaded_file):

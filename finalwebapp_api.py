@@ -546,27 +546,51 @@ try:
     if YOLO is None:
         raise ImportError("YOLO not available")
     
-    # Load YOLO model
+    # Get absolute paths for model loading
+    import sys
+    current_dir = os.path.dirname(os.path.abspath(__file__)) if hasattr(sys, 'argv') else os.getcwd()
+    
+    # Load YOLO model for crack detection
     yolo_path = "runs/detect/train3/weights/best.pt"
-    if os.path.exists(yolo_path):
-        YOLO_MODEL = YOLO(yolo_path)
-        yolo_status = f"✅ Trained crack detection model loaded from {yolo_path}"
-        print(yolo_status)
+    abs_yolo_path = os.path.abspath(yolo_path)
+    print(f"🔍 Looking for crack detection model at: {abs_yolo_path}")
+    print(f"   File exists: {os.path.exists(abs_yolo_path)}")
+    
+    if os.path.exists(abs_yolo_path):
+        try:
+            YOLO_MODEL = YOLO(abs_yolo_path)
+            print(f"✅ Successfully loaded trained crack detection model from {abs_yolo_path}")
+            yolo_status = f"✅ Trained crack detection model loaded ({os.path.getsize(abs_yolo_path)/1e6:.1f}MB)"
+        except Exception as e:
+            print(f"⚠️ Failed to load trained model: {e}. Using fallback...")
+            YOLO_MODEL = YOLO("yolov8n.pt")
+            yolo_status = "⚠️ Using default YOLOv8n model (trained model failed to load)"
     else:
+        print(f"⚠️ Crack detection model not found at {abs_yolo_path}")
         YOLO_MODEL = YOLO("yolov8n.pt")
-        yolo_status = "⚠️ Using default YOLOv8n model (not trained for crack detection)"
-        print(yolo_status)
+        yolo_status = "⚠️ Using default YOLOv8n model (trained model file not found)"
+    print(f"   Model class names: {YOLO_MODEL.names if hasattr(YOLO_MODEL, 'names') else 'Unknown'}")
 
     # Load segmentation model
     seg_path = "segmentation_model/weights/best.pt"
-    if os.path.exists(seg_path):
-        SEGMENTATION_MODEL = YOLO(seg_path)
-        seg_status = f"✅ Segmentation model loaded from {seg_path}"
-        print(seg_status)
+    abs_seg_path = os.path.abspath(seg_path)
+    print(f"🔍 Looking for segmentation model at: {abs_seg_path}")
+    print(f"   File exists: {os.path.exists(abs_seg_path)}")
+    
+    if os.path.exists(abs_seg_path):
+        try:
+            SEGMENTATION_MODEL = YOLO(abs_seg_path)
+            print(f"✅ Successfully loaded segmentation model from {abs_seg_path}")
+            seg_status = f"✅ Segmentation model loaded ({os.path.getsize(abs_seg_path)/1e6:.1f}MB)"
+        except Exception as e:
+            print(f"⚠️ Failed to load segmentation model: {e}. Using fallback...")
+            SEGMENTATION_MODEL = YOLO("yolov8n-seg.pt")
+            seg_status = "⚠️ Using default YOLOv8n-seg model (trained model failed)"
     else:
+        print(f"⚠️ Segmentation model not found at {abs_seg_path}")
         SEGMENTATION_MODEL = YOLO("yolov8n-seg.pt")
-        seg_status = "⚠️ Using default YOLOv8n-seg model"
-        print(seg_status)
+        seg_status = "⚠️ Using default YOLOv8n-seg model (file not found)"
+    print(f"   Model class names: {SEGMENTATION_MODEL.names if hasattr(SEGMENTATION_MODEL, 'names') else 'Unknown'}")
 
     # Load material model
     if TORCH_AVAILABLE and models is not None:
