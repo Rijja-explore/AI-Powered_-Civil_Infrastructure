@@ -25,11 +25,11 @@ torch>=2.9.0
 torchvision>=0.18.0
 
 # ==================== DATA SCIENCE & ANALYTICS ====================
-numpy>=1.25.0,<1.27.0
-pandas>=2.0.3,<2.3.0
-scipy>=1.11.0,<1.15.0
-scikit-learn>=1.3.0,<1.6.0
-statsmodels>=0.14.0,<0.15.0
+numpy>=1.24.0
+pandas>=2.0.0
+scipy>=1.10.0
+scikit-learn>=1.3.0
+statsmodels>=0.14.0
 
 # ==================== DATA VISUALIZATION ====================
 matplotlib>=3.8.0
