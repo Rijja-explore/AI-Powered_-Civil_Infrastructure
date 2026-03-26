@@ -1109,6 +1109,7 @@ import React, { useState, Suspense, useEffect } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
+import { API_URL } from "../config/apiConfig";
 import { Box, Upload, RotateCw, Settings2, Zap } from "lucide-react";
 import "../styles/heightmap3d.css";
 
