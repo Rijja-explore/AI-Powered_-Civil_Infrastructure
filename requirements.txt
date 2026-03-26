@@ -56,3 +56,6 @@ psycopg2-binary>=2.9.7
 # ==================== ONNX SUPPORT ====================
 onnx>=1.14.0
 
+# ==================== PRODUCTION DEPLOYMENT ====================
+gunicorn>=21.0.0
+
