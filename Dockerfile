@@ -42,13 +42,14 @@ RUN mkdir -p /app/runs/detect/train/weights /app/runs/detect/train3/weights && \
     mkdir -p /app/frontend/src /app/frontend/public && \
     mkdir -p /app/frontend/node_modules /app/__pycache__
 
-# Copy trained model weights (tracked via Git LFS)
-COPY runs/detect/train/weights/best.pt /app/runs/detect/train/weights/ 2>/dev/null || true
-COPY runs/detect/train/weights/last.pt /app/runs/detect/train/weights/ 2>/dev/null || true
-COPY runs/detect/train3/weights/best.pt /app/runs/detect/train3/weights/ 2>/dev/null || true
-COPY runs/detect/train3/weights/last.pt /app/runs/detect/train3/weights/ 2>/dev/null || true
-COPY segmentation_model/weights/best.pt /app/segmentation_model/weights/ 2>/dev/null || true
-COPY segmentation_model/weights/last.pt /app/segmentation_model/weights/ 2>/dev/null || true
+# Copy trained model weights if they exist in build context
+# Using RUN with test to gracefully handle missing files
+RUN if [ -f runs/detect/train/weights/best.pt ]; then cp runs/detect/train/weights/best.pt /app/runs/detect/train/weights/; fi && \
+    if [ -f runs/detect/train/weights/last.pt ]; then cp runs/detect/train/weights/last.pt /app/runs/detect/train/weights/; fi && \
+    if [ -f runs/detect/train3/weights/best.pt ]; then cp runs/detect/train3/weights/best.pt /app/runs/detect/train3/weights/; fi && \
+    if [ -f runs/detect/train3/weights/last.pt ]; then cp runs/detect/train3/weights/last.pt /app/runs/detect/train3/weights/; fi && \
+    if [ -f segmentation_model/weights/best.pt ]; then cp segmentation_model/weights/best.pt /app/segmentation_model/weights/; fi && \
+    if [ -f segmentation_model/weights/last.pt ]; then cp segmentation_model/weights/last.pt /app/segmentation_model/weights/; fi || echo "Note: Some model files not found in build context (may be loaded via Git LFS)"
 
 # Expose port
 EXPOSE 7860
