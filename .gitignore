@@ -98,6 +98,15 @@ uploads/
 temp/
 tmp/
 *.csv
+
+# ==================== MODEL TRAINING ARTIFACTS ====================
+# Exclude training outputs and intermediate files (not needed for inference)
+segmentation_model/*.png
+segmentation_model/*.jpg
+segmentation_model/*.jpeg
+segmentation_model/events.out.tfevents.*
+runs/
+*.tfevents.*
 uploads/*
 !uploads/.gitkeep
 segmentation_outputs/
