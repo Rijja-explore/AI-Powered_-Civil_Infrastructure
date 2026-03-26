@@ -26,5 +26,8 @@ COPY . .
 # Expose port
 EXPOSE 7860
 
+# Set Flask app environment variable
+ENV FLASK_APP=finalwebapp_api.py
+
 # Run the app
 CMD ["python", "-m", "flask", "run", "--host=0.0.0.0", "--port=7860"]
