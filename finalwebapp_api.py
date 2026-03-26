@@ -121,9 +121,25 @@ try:
 except ImportError as e:
     ADVANCED_ANALYTICS_AVAILABLE = False
     print(f"⚠️ Advanced Data Analytics not available: {e}")
+    # Provide stub function
+    def create_comprehensive_analytics_report(crack_details, material_analysis, environmental_data):
+        """Stub function when advanced_data_analytics is not available"""
+        return {
+            'error': 'Advanced Analytics Module not available',
+            'crack_count': len(crack_details) if crack_details else 0,
+            'analysis_timestamp': datetime.now().isoformat()
+        }
 except Exception as e:
     ADVANCED_ANALYTICS_AVAILABLE = False
     print(f"⚠️ Advanced Data Analytics failed to load: {e}")
+    # Provide stub function
+    def create_comprehensive_analytics_report(crack_details, material_analysis, environmental_data):
+        """Stub function when advanced_data_analytics fails to load"""
+        return {
+            'error': f'Advanced Analytics failed: {str(e)}',
+            'crack_count': len(crack_details) if crack_details else 0,
+            'analysis_timestamp': datetime.now().isoformat()
+        }
 
 # Unified Analysis Engine disabled - keeping only 3 main pages
 UNIFIED_ANALYSIS_AVAILABLE = False
@@ -1331,36 +1347,49 @@ def analyze():
         print("🔍 Starting comprehensive structural health analysis...")
         
         # Perform all analyses using finalwebapp.py functions
+        try:
+            # 1. YOLO Crack Detection
+            print("   [1/6] Detecting cracks...")
+            annotated_image, crack_details = detect_with_yolo(image_np, px_to_cm_ratio, YOLO_MODEL)
+            
+            # 2. Biological Growth Detection
+            print("   [2/6] Detecting biological growth...")
+            growth_analysis, growth_image = detect_biological_growth(image_np, crack_details)
+            
+            # 3. Image Segmentation
+            print("   [3/6] Segmenting image...")
+            result = segment_image(image_np, SEGMENTATION_MODEL)
+            if isinstance(result, tuple):
+                segmented_image, seg_results = result
+            else:
+                segmented_image = result
+                seg_results = None
+            if segmented_image is None or not isinstance(segmented_image, np.ndarray):
+                segmented_image = image_np.copy()  # Fallback to original image
+            
+            # 4. Depth Estimation
+            print("   [4/6] Estimating depth...")
+            preprocessed = preprocess_image_for_depth_estimation(image_np)
+            depth_heatmap = create_depth_estimation_heatmap(preprocessed)
+            
+            # 5. Edge Detection
+            print("   [5/6] Detecting edges...")
+            edges = apply_canny_edge_detection(image_np)
+            
+            # 6. Material Classification
+            print("   [6/6] Classifying material...")
+            material, probabilities = classify_material(image_np, MATERIAL_MODEL)
+            material_analysis = {
+                'predicted_material': material,
+                'probabilities': probabilities
+            }
+        except Exception as e:
+            print(f"❌ Error during analysis step: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return jsonify({"error": f"Analysis failed during processing: {str(e)}"}), 500
         
-        # 1. YOLO Crack Detection
-        annotated_image, crack_details = detect_with_yolo(image_np, px_to_cm_ratio, YOLO_MODEL)
-        
-        # 2. Biological Growth Detection
-        growth_analysis, growth_image = detect_biological_growth(image_np, crack_details)
-        
-        # 3. Image Segmentation
-        result = segment_image(image_np, SEGMENTATION_MODEL)
-        if isinstance(result, tuple):
-            segmented_image, seg_results = result
-        else:
-            segmented_image = result
-            seg_results = None
-        if segmented_image is None or not isinstance(segmented_image, np.ndarray):
-            segmented_image = image_np.copy()  # Fallback to original image
-        
-        # 4. Depth Estimation
-        preprocessed = preprocess_image_for_depth_estimation(image_np)
-        depth_heatmap = create_depth_estimation_heatmap(preprocessed)
-        
-        # 5. Edge Detection
-        edges = apply_canny_edge_detection(image_np)
-        
-        # 6. Material Classification
-        material, probabilities = classify_material(image_np, MATERIAL_MODEL)
-        material_analysis = {
-            'predicted_material': material,
-            'probabilities': probabilities
-        }
+        print("✅ All analysis steps completed")
         
         # Calculate statistics first
         total_cracks = len(crack_details)
@@ -1419,17 +1448,25 @@ def analyze():
         
         # Create comprehensive environmental impact graphs
         print("📊 Generating environmental impact visualizations...")
-        environmental_charts = create_environmental_impact_graphs(
-            carbon_footprint, water_footprint, material_quantity, energy_consumption
-        )
+        try:
+            environmental_charts = create_environmental_impact_graphs(
+                carbon_footprint, water_footprint, material_quantity, energy_consumption
+            )
+        except Exception as e:
+            print(f"⚠️ Error generating environmental charts: {e}")
+            environmental_charts = None
         
         # Create data science inference graphs
         print("📈 Generating data science analysis with inference...")
-        data_science_chart = create_data_science_inference_graphs({
-            'crack_detection': {'details': crack_details},
-            'material_analysis': material_analysis,
-            'biological_growth': growth_analysis
-        })
+        try:
+            data_science_chart = create_data_science_inference_graphs({
+                'crack_detection': {'details': crack_details},
+                'material_analysis': material_analysis,
+                'biological_growth': growth_analysis
+            })
+        except Exception as e:
+            print(f"⚠️ Error generating data science charts: {e}")
+            data_science_chart = None
         
         # Prepare comprehensive response with numpy type conversion
         results = convert_numpy_types({
@@ -1516,26 +1553,52 @@ def analyze():
             }
         })
         
-        # Convert all images to base64
-        def ensure_3channel(img):
-            """Ensure image is 3-channel BGR for encoding"""
-            if img is None:
-                return None
-            if len(img.shape) == 2:  # Grayscale
-                return cv2.cvtColor(img, cv2.COLOR_GRAY2BGR) if cv2 else img
-            return img
-        
-        output_images = {
-            "original": image_to_base64(ensure_3channel(image_np)),
-            "crack_detection": image_to_base64(ensure_3channel(annotated_image)),
-            "biological_growth": image_to_base64(ensure_3channel(growth_image)),
-            "segmentation": image_to_base64(ensure_3channel(segmented_image)),
-            "depth_estimation": image_to_base64(ensure_3channel(depth_heatmap)),
-            "edge_detection": image_to_base64(ensure_3channel(edges)),
-            "moisture_dampness_heatmap": image_to_base64(ensure_3channel(generate_moisture_dampness_heatmap(image_np, segmented_image))),
-            "structural_stress_map": image_to_base64(ensure_3channel(generate_structural_stress_map(image_np, annotated_image))),
-            "thermal_infrared_simulation": image_to_base64(ensure_3channel(generate_thermal_infrared_simulation(image_np, depth_heatmap)))
-        }
+        # Create image outputs with error handling
+        print("🖼️ Generating output images...")
+        try:
+            def ensure_3channel(img):
+                """Ensure image is 3-channel BGR for encoding"""
+                if img is None:
+                    return None
+                if len(img.shape) == 2:  # Grayscale
+                    return cv2.cvtColor(img, cv2.COLOR_GRAY2BGR) if cv2 else img
+                return img
+            
+            # Generate basic images
+            output_images = {
+                "original": image_to_base64(ensure_3channel(image_np)),
+                "crack_detection": image_to_base64(ensure_3channel(annotated_image)),
+                "biological_growth": image_to_base64(ensure_3channel(growth_image)),
+                "segmentation": image_to_base64(ensure_3channel(segmented_image)),
+                "depth_estimation": image_to_base64(ensure_3channel(depth_heatmap)),
+                "edge_detection": image_to_base64(ensure_3channel(edges)),
+            }
+            
+            # Generate additional analysis images with error handling
+            try:
+                output_images["moisture_dampness_heatmap"] = image_to_base64(ensure_3channel(generate_moisture_dampness_heatmap(image_np, segmented_image)))
+            except Exception as e:
+                print(f"   ⚠️ Skipped moisture heatmap: {e}")
+                output_images["moisture_dampness_heatmap"] = None
+            
+            try:
+                output_images["structural_stress_map"] = image_to_base64(ensure_3channel(generate_structural_stress_map(image_np, annotated_image)))
+            except Exception as e:
+                print(f"   ⚠️ Skipped structural stress map: {e}")
+                output_images["structural_stress_map"] = None
+            
+            try:
+                output_images["thermal_infrared_simulation"] = image_to_base64(ensure_3channel(generate_thermal_infrared_simulation(image_np, depth_heatmap)))
+            except Exception as e:
+                print(f"   ⚠️ Skipped thermal simulation: {e}")
+                output_images["thermal_infrared_simulation"] = None
+            
+        except Exception as e:
+            print(f"❌ Error generating output images: {e}")
+            import traceback
+            traceback.print_exc()
+            # Provide minimal output images
+            output_images = {"original": image_to_base64(image_np)}
 
         # Create material properties chart now that carbon & sustainability known
         try:
