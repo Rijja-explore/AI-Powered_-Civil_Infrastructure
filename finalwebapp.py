@@ -11,10 +11,22 @@ from PIL import Image
 import pandas as pd
 from sklearn.linear_model import LinearRegression
 import os
-import torch
-import torch.nn as nn
-import torchvision.models as models
-import torchvision.transforms as transforms
+
+# Try to import torch
+try:
+    import torch
+    import torch.nn as nn
+    import torchvision.models as models
+    import torchvision.transforms as transforms
+    TORCH_AVAILABLE = True
+except (ImportError, AttributeError) as e:
+    print(f"⚠️ PyTorch not available: {e}")
+    TORCH_AVAILABLE = False
+    torch = None
+    nn = None
+    models = None
+    transforms = None
+
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
