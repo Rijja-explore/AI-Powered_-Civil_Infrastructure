@@ -4,7 +4,6 @@ import './styles/main.css';
 
 // Import pages
 import ImageAnalysis from './pages/ImageAnalysis';
-import VideoAnalysis from './pages/VideoAnalysis';
 import RealTimeMonitoring from './pages/RealTimeMonitoring';
 import Heightmap3D from './pages/Heightmap3D';
 import { AnalysisProvider } from './contexts/AnalysisContext';
@@ -36,7 +35,6 @@ function App() {
 
   const routes = [
     { id: 'image-analysis', label: 'Image Analysis', Icon: Camera, Component: ImageAnalysis, description: 'AI-powered crack detection & material analysis' },
-    { id: 'video-analysis', label: 'Video Analysis', Icon: Video, Component: VideoAnalysis, description: 'Real-time video monitoring & processing' },
     { id: '3d-heightmap', label: '3D Heightmap', Icon: Box, Component: Heightmap3D, description: 'Convert 2D images to 3D heightmaps' }
   ];
 

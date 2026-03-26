@@ -404,6 +404,9 @@ def apply_canny_edge_detection(image_np):
 # Define material classes globally
 material_classes = ['Stone', 'Brick', 'Plaster', 'Concrete', 'Wood', 'Metal', 'Marble', 'Sandstone']
 
+# Define material classes
+material_classes = ['Brick', 'Concrete', 'Stone', 'Sandstone', 'Marble', 'Plaster', 'Wood', 'Metal']
+
 def classify_material(image_np, model=None):
     try:
         if model is None:
