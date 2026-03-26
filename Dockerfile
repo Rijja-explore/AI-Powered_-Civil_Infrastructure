@@ -2,6 +2,9 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
+# Force rebuild - updated directory handling for runs/, segmentation_model/, and frontend/
+LABEL builder.version="1.1"
+
 # Install system dependencies for image processing and OpenGL support
 RUN apt-get update && apt-get install -y \
     libsm6 \
