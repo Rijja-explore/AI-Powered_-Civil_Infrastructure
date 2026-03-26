@@ -7,7 +7,7 @@ from pathlib import Path
 from huggingface_hub import hf_hub_download
 
 # Your HF Hub repo - Update this with your actual repo
-HF_REPO_ID = "Rijja-explore/InfraVision-Models"  # Change to your HF username/repo
+HF_REPO_ID = "RijjaExplore/InfraVision-Models"  # Correct repo ID with proper capitalization
 
 MODEL_FILES = {
     'crack_detection': {
