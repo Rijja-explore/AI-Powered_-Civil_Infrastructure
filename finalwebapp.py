@@ -1,4 +1,11 @@
-import streamlit as st
+# Try to import streamlit (optional, for Streamlit app only)
+try:
+    import streamlit as st
+    STREAMLIT_AVAILABLE = True
+except ImportError:
+    STREAMLIT_AVAILABLE = False
+    st = None
+
 import numpy as np
 from PIL import Image
 import pandas as pd
