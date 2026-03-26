@@ -42,14 +42,25 @@ RUN mkdir -p /app/runs/detect/train/weights /app/runs/detect/train3/weights && \
     mkdir -p /app/frontend/src /app/frontend/public && \
     mkdir -p /app/frontend/node_modules /app/__pycache__
 
-# Copy trained model weights if they exist in build context
-# Using RUN with test to gracefully handle missing files
-RUN if [ -f runs/detect/train/weights/best.pt ]; then cp runs/detect/train/weights/best.pt /app/runs/detect/train/weights/; fi && \
-    if [ -f runs/detect/train/weights/last.pt ]; then cp runs/detect/train/weights/last.pt /app/runs/detect/train/weights/; fi && \
-    if [ -f runs/detect/train3/weights/best.pt ]; then cp runs/detect/train3/weights/best.pt /app/runs/detect/train3/weights/; fi && \
-    if [ -f runs/detect/train3/weights/last.pt ]; then cp runs/detect/train3/weights/last.pt /app/runs/detect/train3/weights/; fi && \
-    if [ -f segmentation_model/weights/best.pt ]; then cp segmentation_model/weights/best.pt /app/segmentation_model/weights/; fi && \
-    if [ -f segmentation_model/weights/last.pt ]; then cp segmentation_model/weights/last.pt /app/segmentation_model/weights/; fi || echo "Note: Some model files not found in build context (may be loaded via Git LFS)"
+# Copy model directories - Git LFS will have already downloaded these
+COPY runs/ /app/runs/
+COPY segmentation_model/ /app/segmentation_model/
+COPY frontend/ /app/frontend/
+
+# Verify models exist in container
+RUN echo "Checking models..." && \
+    if [ -f /app/runs/detect/train3/weights/best.pt ]; then \
+        echo "✅ CRACK DETECTION MODEL FOUND" && \
+        ls -lh /app/runs/detect/train3/weights/best.pt; \
+    else \
+        echo "⚠️ CRACK DETECTION MODEL NOT FOUND"; \
+    fi && \
+    if [ -f /app/segmentation_model/weights/best.pt ]; then \
+        echo "✅ SEGMENTATION MODEL FOUND" && \
+        ls -lh /app/segmentation_model/weights/best.pt; \
+    else \
+        echo "⚠️ SEGMENTATION MODEL NOT FOUND"; \
+    fi
 
 # Expose port
 EXPOSE 7860
