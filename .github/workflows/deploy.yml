@@ -1,79 +1,25 @@
-name: Deploy to Render
+name: Deploy to Hugging Face Space
 
 on:
   push:
     branches:
       - main
-      - develop
-
-env:
-  REGISTRY: docker.io
 
 jobs:
-  test-backend:
+  deploy:
     runs-on: ubuntu-latest
-    
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-      
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-      
-      - name: Run basic checks
-        run: |
-          python -m py_compile finalwebapp_api.py
-          echo "✅ Backend Python syntax valid"
 
-  test-frontend:
-    runs-on: ubuntu-latest
-    
     steps:
-      - uses: actions/checkout@v3
-      
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
-      
-      - name: Install dependencies
-        run: |
-          cd frontend
-          npm ci
-      
-      - name: Build frontend
-        run: |
-          cd frontend
-          npm run build
-          echo "✅ Frontend build successful"
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
-  render-deploy:
-    needs: [test-backend, test-frontend]
-    runs-on: ubuntu-latest
-    
-    steps:
-      - uses: actions/checkout@v3
-      
-      # Render auto-deploys on git push to connected repo
-      # This is a status check that your deployment pipeline worked
-      - name: Notify Render Deployment
+      - name: Push to Hugging Face
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          echo "✅ Deployment triggered on Render"
-          echo "Monitor progress at: https://dashboard.render.com"
-          echo "Backend: https://infravision-ai-backend.onrender.com"
-          echo "Frontend: https://infravision-ai-frontend.onrender.com"
-      
-      - name: Verify Deployment Readiness
-        run: |
-          [ -f "Procfile" ] && echo "✅ Procfile exists" || exit 1
-          grep -q "gunicorn" requirements.txt && echo "✅ gunicorn configured" || exit 1
-          [ -d "frontend" ] && echo "✅ Frontend directory exists" || exit 1
-          echo "🚀 Deployment ready!"
+          git clone https://RijjaExplore:$HF_TOKEN@huggingface.co/spaces/RijjaExplore/infravision-ai-api space-repo
+          rsync -av --exclude='.git' ./ space-repo/
+          cd space-repo
+          git add .
+          git commit -m "Auto deploy" || echo "No changes"
+          git push
