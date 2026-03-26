@@ -34,12 +34,19 @@ COPY image_3d_heightmap.py .
 COPY *.py ./
 
 # Create necessary directory structure for models and frontend
-# Docker build context may not include these directories (they may need to be loaded separately)
-# The application will check these directories at runtime and load models if available
 RUN mkdir -p /app/runs/detect/train/weights /app/runs/detect/train3/weights && \
     mkdir -p /app/segmentation_model/weights && \
     mkdir -p /app/frontend/src /app/frontend/public && \
     mkdir -p /app/frontend/node_modules /app/__pycache__
+
+# Copy trained model weights (now available via Git LFS from repository)
+# Copy with shell commands to handle optional files gracefully
+RUN if [ -f runs/detect/train/weights/best.pt ]; then cp runs/detect/train/weights/best.pt /app/runs/detect/train/weights/; fi
+RUN if [ -f runs/detect/train/weights/last.pt ]; then cp runs/detect/train/weights/last.pt /app/runs/detect/train/weights/; fi
+RUN if [ -f runs/detect/train3/weights/best.pt ]; then cp runs/detect/train3/weights/best.pt /app/runs/detect/train3/weights/; fi
+RUN if [ -f runs/detect/train3/weights/last.pt ]; then cp runs/detect/train3/weights/last.pt /app/runs/detect/train3/weights/; fi
+RUN if [ -f segmentation_model/weights/best.pt ]; then cp segmentation_model/weights/best.pt /app/segmentation_model/weights/; fi
+RUN if [ -f segmentation_model/weights/last.pt ]; then cp segmentation_model/weights/last.pt /app/segmentation_model/weights/; fi
 
 # Expose port
 EXPOSE 7860
