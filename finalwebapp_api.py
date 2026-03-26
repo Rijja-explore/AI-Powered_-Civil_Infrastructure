@@ -1533,7 +1533,7 @@ def analyze():
                 "inference_results": {
                     "confidence_intervals": {
                         "crack_detection_accuracy": "95.2% ± 2.1%",
-                        "material_classification_precision": f"{float(max(material_analysis['probabilities'].values()) if isinstance(material_analysis['probabilities'], dict) else max(material_analysis['probabilities']) if isinstance(material_analysis['probabilities'], (list, tuple)) else material_analysis['probabilities']) * 100:.1f}% ± 3.5%",
+                        "material_classification_precision": (lambda: (lambda prob: f"{(prob.item() if hasattr(prob, 'item') else float(prob)) * 100:.1f}% ± 3.5%")(max(material_analysis['probabilities'].values()) if isinstance(material_analysis['probabilities'], dict) else max(material_analysis['probabilities']) if isinstance(material_analysis['probabilities'], (list, tuple)) else material_analysis['probabilities']))(),
                         "growth_measurement_error": "±5.2%"
                     },
                     "statistical_significance": {
