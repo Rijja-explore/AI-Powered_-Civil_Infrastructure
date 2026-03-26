@@ -54,7 +54,7 @@ const RealTimeMonitoring = () => {
 
   const disconnectCamera = async () => {
     try {
-      await fetch('http://localhost:5002/api/disconnect_camera', {
+      await fetch(`${API_URL}/api/disconnect_camera`, {
         method: 'POST'
       });
       setCameraConnected(false);
@@ -75,7 +75,7 @@ const RealTimeMonitoring = () => {
 
   const startStream = async () => {
     try {
-      const response = await fetch('http://localhost:5002/api/start_stream', {
+      const response = await fetch(`${API_URL}/api/start_stream`, {
         method: 'POST'
       });
       const data = await response.json();
@@ -94,7 +94,7 @@ const RealTimeMonitoring = () => {
 
   const stopStream = async () => {
     try {
-      await fetch('http://localhost:5002/api/stop_stream', {
+      await fetch(`${API_URL}/api/stop_stream`, {
         method: 'POST'
       });
       setIsStreaming(false);
@@ -110,7 +110,7 @@ const RealTimeMonitoring = () => {
     if (isStreaming) {
       metricsInterval = setInterval(async () => {
         try {
-          const response = await fetch('http://localhost:5002/api/stream_metrics');
+          const response = await fetch(`${API_URL}/api/stream_metrics`);
           const data = await response.json();
           setMetrics(prevMetrics => ({
             ...prevMetrics,

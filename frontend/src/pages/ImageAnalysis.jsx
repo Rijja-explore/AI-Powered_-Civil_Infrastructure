@@ -103,7 +103,7 @@ const ImageAnalysis = () => {
       setLoading(false);
     } catch (err) {
       console.error('Analysis error:', err);
-      setError('Analysis failed. Make sure the backend (finalwebapp_api.py) is running on port 5002.');
+      setError(`Analysis failed. Make sure the backend is running and accessible at ${API_URL}`);
       setLoading(false);
       setProgress(0);
     }
