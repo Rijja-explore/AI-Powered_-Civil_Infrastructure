@@ -2,8 +2,10 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Force rebuild - updated directory handling for runs/, segmentation_model/, and frontend/
-LABEL builder.version="1.1"
+# Force rebuild - ensure runs/, segmentation_model/, frontend/ directories are properly included
+# BuildKit cache bust: 2026-03-26T23:47:00
+ARG BUILD_DATE=2026-03-26T23:47:00
+LABEL builder.date="${BUILD_DATE}"
 
 # Install system dependencies for image processing and OpenGL support
 RUN apt-get update && apt-get install -y \
