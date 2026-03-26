@@ -2,12 +2,14 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies (including OpenGL for headless environments)
 RUN apt-get update && apt-get install -y \
     libsm6 \
     libxext6 \
     libxrender-dev \
     libgomp1 \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements
@@ -19,6 +21,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy app code
 COPY finalwebapp_api.py .
 COPY finalwebapp.py .
+COPY pdf_report.py .
 COPY segmentation_with_localisation.py .
 COPY image_3d_heightmap.py .
 COPY . .

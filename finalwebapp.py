@@ -62,7 +62,24 @@ if __name__ == "__main__":
     if 'video_pdf_buffers' not in st.session_state:
         st.session_state.video_pdf_buffers = {}
 
-from pdf_report import save_image_to_temp, generate_pdf_report
+# Import pdf_report functions
+try:
+    from pdf_report import save_image_to_temp, generate_pdf_report
+    print("✅ PDF report module imported successfully")
+except ImportError as e:
+    print(f"⚠️ PDF report module not available: {e}. PDF generation will be skipped.")
+    # Provide stub functions
+    def save_image_to_temp(image_np, format='PNG'):
+        """Stub function when pdf_report is not available"""
+        return None
+    
+    def generate_pdf_report(*args, **kwargs):
+        """Stub function when pdf_report is not available"""
+        import io
+        buffer = io.BytesIO()
+        buffer.write(b'%PDF-1.4\nPDF generation not available\n')
+        buffer.seek(0)
+        return buffer
 
 # Model loading - only when running as main script
 if __name__ == "__main__":
