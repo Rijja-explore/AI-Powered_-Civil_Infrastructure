@@ -26,6 +26,7 @@ COPY segmentation_with_localisation.py .
 COPY image_3d_heightmap.py .
 
 # Copy trained models - CRITICAL for crack detection and segmentation
+# These directories must exist (may contain .gitkeep placeholder if empty in CI/CD)
 COPY runs/ ./runs/
 COPY segmentation_model/ ./segmentation_model/
 
