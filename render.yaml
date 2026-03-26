@@ -32,27 +32,6 @@ services:
     preDeployCommand: |
       pip install gunicorn python-dotenv
 
-  # Frontend Static Site
-  - type: static
-    name: infravision-ai-frontend
-    plan: free
-    buildCommand: |
-      cd frontend
-      npm install
-      npm run build
-    staticPublishPath: frontend/build
-    
-    envVars:
-      - key: REACT_APP_API_URL
-        value: https://infravision-ai-backend.onrender.com
-      - key: REACT_APP_ENV
-        value: production
-    
-    regions:
-      - us-east
-    autoDeploy: true
-    branch: main
-
   # PostgreSQL Database (Optional)
   # Uncomment to use database
   # - type: pserv
