@@ -1,6 +1,7 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { Camera, Video, Activity, BarChart3, Leaf, Shield, Zap, Eye, Wifi, WifiOff, Clock, AlertTriangle, Box } from 'lucide-react';
 import './styles/main.css';
+import './styles/mobile-responsive.css';
 
 // Import pages
 import ImageAnalysis from './pages/ImageAnalysis';

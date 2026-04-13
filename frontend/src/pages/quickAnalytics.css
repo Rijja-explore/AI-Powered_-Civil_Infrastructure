@@ -381,21 +381,355 @@
   margin-top: 2rem;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
+/* ================================================ */
+/* MOBILE RESPONSIVE STYLES - QUICK ANALYTICS       */
+/* ================================================ */
+
+/* Small devices (< 480px) */
+@media (max-width: 479px) {
   .quick-analytics-container {
     padding: 1rem;
   }
 
   .analytics-header h1 {
-    font-size: 1.8rem;
+    font-size: 1.5rem;
+    margin: 0 0 0.25rem 0;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  }
+
+  .metadata {
+    font-size: 0.8rem;
+  }
+
+  .summary-cards {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .card {
+    padding: 1rem;
+  }
+
+  .card h3 {
+    font-size: 0.8rem;
+    margin: 0 0 0.75rem 0;
+  }
+
+  .big-number {
+    font-size: 2rem;
+  }
+
+  .chart-description {
+    font-size: 0.75rem;
+    padding: 6px 10px;
+    margin: 0 0 10px 0;
+  }
+
+  .statistical-visualizations,
+  .summary-tables {
+    margin: 1.5rem 0;
+    padding: 1rem;
+  }
+
+  .statistical-visualizations h2,
+  .summary-tables h2 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+  }
+
+  .table-card {
+    margin-bottom: 1rem;
+    padding: 1rem;
+  }
+
+  .table-card h3 {
+    font-size: 0.95rem;
+    margin: 0 0 0.75rem 0;
+  }
+
+  .stats-table {
+    font-size: 0.75rem;
+  }
+
+  .stats-table th,
+  .stats-table td {
+    padding: 6px 4px;
   }
 
   .charts-grid {
     grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .chart-card {
+    padding: 1rem;
+  }
+
+  .chart-card h3 {
+    font-size: 0.95rem;
+    margin: 0 0 0.75rem 0;
+  }
+
+  .tests-section {
+    margin-bottom: 1.5rem;
+  }
+
+  .tests-section h2 {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+  }
+
+  .tests-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .test-card {
+    padding: 1rem;
+  }
+
+  .test-card h4 {
+    font-size: 0.9rem;
+    margin: 0 0 0.5rem 0;
+  }
+
+  .test-card .description {
+    font-size: 0.8rem;
+    margin: 0 0 0.75rem 0;
+  }
+
+  .result-row {
+    font-size: 0.85rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .interpretation {
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+  }
+
+  .risk-images-section h2 {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+  }
+
+  .risk-images-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .risk-category {
+    padding: 1rem;
+  }
+
+  .risk-category h3 {
+    font-size: 1rem;
+    margin: 0 0 0.75rem 0;
+  }
+
+  .risk-category table {
+    font-size: 0.8rem;
+  }
+
+  .risk-category th {
+    padding: 0.5rem;
+  }
+
+  .risk-category td {
+    padding: 0.5rem;
+  }
+
+  .risk-badge {
+    padding: 0.2rem 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .loading,
+  .error,
+  .empty-state {
+    padding: 2rem 1rem;
+  }
+
+  .loading {
+    font-size: 1rem;
+  }
+
+  .empty-state {
+    min-height: 200px;
+  }
+
+  .retry-btn,
+  .refresh-btn {
+    padding: 0.65rem 1rem;
+    font-size: 0.85rem;
+    width: 90%;
+    margin-top: 0.75rem;
+  }
+
+  .actions {
+    margin-top: 1rem;
+  }
+}
+
+/* Medium devices (480px - 768px) */
+@media (min-width: 480px) and (max-width: 767px) {
+  .quick-analytics-container {
+    padding: 1.5rem;
+  }
+
+  .analytics-header h1 {
+    font-size: 2rem;
   }
 
   .summary-cards {
     grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+  }
+
+  .card {
+    padding: 1.25rem;
+  }
+
+  .big-number {
+    font-size: 2.25rem;
+  }
+
+  .charts-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .statistical-visualizations,
+  .summary-tables {
+    padding: 1.5rem;
+  }
+
+  .tests-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .risk-images-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .stats-table {
+    font-size: 0.85rem;
+  }
+
+  .stats-table th,
+  .stats-table td {
+    padding: 8px 6px;
+  }
+
+  .retry-btn,
+  .refresh-btn {
+    width: auto;
+  }
+}
+
+/* Large devices (768px - 1024px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .quick-analytics-container {
+    padding: 2rem;
+  }
+
+  .analytics-header h1 {
+    font-size: 2.3rem;
+  }
+
+  .summary-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+
+  .charts-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+
+  .tests-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .risk-images-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+
+  .statistical-visualizations,
+  .summary-tables {
+    padding: 2rem;
+  }
+}
+
+/* XL devices (1024px+) */
+@media (min-width: 1024px) {
+  /* Keep existing desktop styles */
+}
+
+/* Landscape orientation optimization */
+@media (orientation: landscape) and (max-height: 600px) {
+  .quick-analytics-container {
+    padding: 1rem;
+  }
+
+  .analytics-header h1 {
+    font-size: 1.3rem;
+    margin: 0 0 0.25rem 0;
+  }
+
+  .metadata {
+    font-size: 0.75rem;
+  }
+
+  .summary-cards {
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .card {
+    padding: 0.75rem;
+  }
+
+  .big-number {
+    font-size: 1.75rem;
+  }
+
+  .charts-grid {
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .chart-card {
+    padding: 1rem;
+  }
+
+  .tests-section h2,
+  .risk-images-section h2 {
+    font-size: 1.2rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .tests-grid,
+  .risk-images-grid {
+    gap: 0.75rem;
+  }
+
+  .statistical-visualizations,
+  .summary-tables {
+    padding: 1rem;
+    margin: 1rem 0;
+  }
+
+  .retry-btn,
+  .refresh-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
   }
 }
