@@ -92,6 +92,7 @@ dist/
 *.pkl
 *.joblib
 *.onnx
+*.tflite
 
 # ==================== DATA FILES (Temporary Outputs) ====================
 uploads/
