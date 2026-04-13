@@ -19,6 +19,8 @@ An advanced AI-powered platform for real-time structural health monitoring and i
 - [Quick Start](#quick-start)
 - [Features](#features)
 - [Installation](#installation)
+- [Material Classifier](#material-classifier)
+- [Deployment](#deployment)
 - [Project Structure](#project-structure)
 - [API Endpoints](#api-endpoints)
 - [Usage Guide](#usage-guide)
@@ -96,9 +98,55 @@ npm start
 - Interactive 3D viewer
 - Export for AR/VR applications
 
+### 5. **Material Classification**
+- Automatic identification of surface materials
+- Supports 8 material types: Brick, Concrete, Stone, Sandstone, Marble, Plaster, Wood, Metal
+- Trained deep learning model with 85%+ accuracy
+- Confidence scoring for each classification
+- Fallback HSV-based texture analysis
+
 ---
 
-## 📦 Installation Details
+## 🏢 Material Classifier
+
+The InfraVision system includes an advanced material classification module:
+
+**Trained Models:**
+- **Keras/TensorFlow** (`material_classifier.h5` - 21.7MB) - High accuracy
+- **TensorFlow Lite** (`material_classifier.tflite` - 8.9MB) - Optimized inference
+- **PyTorch MobileNetV2** - Automatic fallback
+
+**Features:**
+- Real-time classification on uploaded images
+- Confidence probability distribution for all 8 material types
+- Integrated with crack detection for context-aware analysis
+- Video frame analysis support
+
+**Deployment:**
+Models are automatically downloaded from Hugging Face Hub during container startup.
+See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for details.
+
+---
+
+## 🚀 Deployment
+
+InfraVision is deployed across two cloud platforms:
+
+### Frontend: Vercel
+- React application
+- Real-time updates
+- Environment variable: `REACT_APP_API_URL`
+- [Current deployment](https://infravision-kohl.vercel.app/)
+
+### Backend: Hugging Face Spaces
+- Flask API (Port 7860)
+- Docker containerization
+- Automatic model downloads from HF Hub
+- All trained models included
+
+**For detailed deployment instructions, see [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)**
+
+---
 
 ### Python Environment (Windows)
 ```bash

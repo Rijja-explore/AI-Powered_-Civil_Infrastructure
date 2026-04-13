@@ -37,6 +37,18 @@ except ImportError as e:
     nn = None
     models = None
     transforms = None
+
+# Try to import TensorFlow/Keras for trained model loading
+try:
+    import tensorflow as tf
+    from tensorflow import keras
+    TF_AVAILABLE = True
+    print("✅ TensorFlow/Keras loaded successfully")
+except (ImportError, AttributeError) as e:
+    print(f"⚠️ TensorFlow not available: {e}")
+    TF_AVAILABLE = False
+    tf = None
+    keras = None
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
@@ -378,27 +390,65 @@ with warnings.catch_warnings():
             except:
                 return np.zeros((480, 640), dtype=np.uint8)
         def classify_material(image_np, model=None):
-            """Material classification using PyTorch or fallback"""
+            """Material classification using trained TensorFlow/Keras, PyTorch, or fallback"""
             try:
                 if model is None:
                     model = MATERIAL_MODEL
                 if model is None:
                     return 'Unknown', {'Unknown': 1.0}
                 
-                # Prepare image for model
-                image_resized = cv2.resize(image_np, (224, 224))
-                image_tensor = torch.from_numpy(image_resized).permute(2, 0, 1).float().unsqueeze(0) / 255.0
-                
-                with torch.no_grad():
-                    output = model(image_tensor)
-                    probs = torch.softmax(output, dim=1)[0].detach().numpy()
-                
                 material_names = ['Brick', 'Concrete', 'Stone', 'Sandstone', 'Marble', 'Plaster', 'Wood', 'Metal']
-                predicted_idx = np.argmax(probs)
-                predicted_material = material_names[predicted_idx]
                 
-                # Return material and confidence dict
-                return predicted_material, {material_names[i]: float(probs[i]) for i in range(len(material_names))}
+                # Check if it's a TensorFlow model
+                if TF_AVAILABLE and tf is not None and isinstance(model, (keras.Model, tf.lite.Interpreter)):
+                    try:
+                        # Preprocessing for TensorFlow model
+                        image_rgb = cv2.cvtColor(image_np, cv2.COLOR_BGR2RGB) if len(image_np.shape) > 2 else image_np
+                        image_resized = cv2.resize(image_rgb, (224, 224))
+                        image_array = image_resized.astype('float32') / 255.0
+                        image_batch = np.expand_dims(image_array, axis=0)
+                        
+                        if isinstance(model, keras.Model):
+                            # Keras model prediction
+                            output = model.predict(image_batch, verbose=0)
+                            probs = output[0]
+                        else:
+                            # TFLite interpreter prediction
+                            input_details = model.get_input_details()
+                            output_details = model.get_output_details()
+                            model.set_tensor(input_details[0]['index'], image_batch)
+                            model.invoke()
+                            probs = np.squeeze(model.get_tensor(output_details[0]['index']))
+                        
+                        if isinstance(probs, np.ndarray):
+                            probs = np.squeeze(probs)
+                        
+                        predicted_idx = np.argmax(probs)
+                        predicted_material = material_names[predicted_idx]
+                        
+                        return predicted_material, {material_names[i]: float(probs[i]) for i in range(len(probs))}
+                    except Exception as e:
+                        print(f"TensorFlow classification error: {e}")
+                        return 'Unknown', {'Unknown': 1.0}
+                
+                # PyTorch model (fallback)
+                elif TORCH_AVAILABLE and torch is not None:
+                    # Prepare image for model
+                    image_resized = cv2.resize(image_np, (224, 224))
+                    image_tensor = torch.from_numpy(image_resized).permute(2, 0, 1).float().unsqueeze(0) / 255.0
+                    
+                    with torch.no_grad():
+                        output = model(image_tensor)
+                        probs = torch.softmax(output, dim=1)[0].detach().numpy()
+                    
+                    predicted_idx = np.argmax(probs)
+                    predicted_material = material_names[predicted_idx]
+                    
+                    # Return material and confidence dict
+                    return predicted_material, {material_names[i]: float(probs[i]) for i in range(len(material_names))}
+                else:
+                    return 'Unknown', {'Unknown': 1.0}
+                
             except Exception as e:
                 print(f"Material classification error: {e}")
                 return 'Brick', {'Brick': 0.85, 'Concrete': 0.10, 'Stone': 0.05}
@@ -593,17 +643,65 @@ try:
     print(f"   Model class names: {SEGMENTATION_MODEL.names if hasattr(SEGMENTATION_MODEL, 'names') else 'Unknown'}")
 
     # Load material model
-    if TORCH_AVAILABLE and models is not None:
-        MATERIAL_MODEL = models.mobilenet_v2(weights='IMAGENET1K_V1')
-        MATERIAL_MODEL.classifier = nn.Sequential(
-            nn.Dropout(0.2),
-            nn.Linear(MATERIAL_MODEL.last_channel, 8)
-        )
-        MATERIAL_MODEL.eval()
-        material_status = "MobileNetV2 model loaded with custom classifier for 8 material types"
+    if TF_AVAILABLE and tf is not None and keras is not None:
+        try:
+            # Try to load trained .h5 model
+            material_h5_path = os.path.join(os.path.dirname(__file__), "materialclassification_model/material_classifier.h5")
+            if os.path.exists(material_h5_path):
+                MATERIAL_MODEL = keras.models.load_model(material_h5_path)
+                MATERIAL_MODEL.trainable = False
+                material_status = f"✅ Trained material classifier loaded from .h5 ({os.path.getsize(material_h5_path)/1e6:.1f}MB)"
+                print(f"   {material_status}")
+            else:
+                # Try .tflite model as fallback
+                material_tflite_path = os.path.join(os.path.dirname(__file__), "materialclassification_model/material_classifier.tflite")
+                if os.path.exists(material_tflite_path):
+                    interpreter = tf.lite.Interpreter(model_path=material_tflite_path)
+                    interpreter.allocate_tensors()
+                    MATERIAL_MODEL = interpreter
+                    material_status = f"✅ Trained material classifier loaded from .tflite ({os.path.getsize(material_tflite_path)/1e6:.1f}MB)"
+                    print(f"   {material_status}")
+                else:
+                    raise FileNotFoundError("No trained material classifier found")
+        except Exception as e:
+            print(f"   ⚠️ Failed to load trained material model: {e}")
+            # Fallback to PyTorch if available
+            if TORCH_AVAILABLE and models is not None:
+                try:
+                    MATERIAL_MODEL = models.mobilenet_v2(weights='IMAGENET1K_V1')
+                    MATERIAL_MODEL.classifier = nn.Sequential(
+                        nn.Dropout(0.2),
+                        nn.Linear(MATERIAL_MODEL.last_channel, 8)
+                    )
+                    MATERIAL_MODEL.eval()
+                    material_status = "⚠️ Using PyTorch MobileNetV2 fallback"
+                    print(f"   {material_status}")
+                except Exception as e2:
+                    MATERIAL_MODEL = None
+                    material_status = f"❌ Material model failed: {e2}"
+                    print(f"   {material_status}")
+            else:
+                MATERIAL_MODEL = None
+                material_status = "❌ Material model not available (TensorFlow and PyTorch unavailable)"
+                print(f"   {material_status}")
+    elif TORCH_AVAILABLE and models is not None:
+        try:
+            MATERIAL_MODEL = models.mobilenet_v2(weights='IMAGENET1K_V1')
+            MATERIAL_MODEL.classifier = nn.Sequential(
+                nn.Dropout(0.2),
+                nn.Linear(MATERIAL_MODEL.last_channel, 8)
+            )
+            MATERIAL_MODEL.eval()
+            material_status = "⚠️ PyTorch MobileNetV2 loaded (TensorFlow unavailable)"
+            print(f"   {material_status}")
+        except Exception as e:
+            MATERIAL_MODEL = None
+            material_status = f"❌ Material model failed: {e}"
+            print(f"   {material_status}")
     else:
         MATERIAL_MODEL = None
-        material_status = "Material model not available (PyTorch required)"
+        material_status = "❌ Material model not available (TensorFlow and PyTorch required)"
+        print(f"   {material_status}")
     
     MODELS_STATUS = {
         'yolo': yolo_status,

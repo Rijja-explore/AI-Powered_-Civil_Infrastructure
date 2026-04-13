@@ -27,6 +27,17 @@ except (ImportError, AttributeError) as e:
     models = None
     transforms = None
 
+# Try to import TensorFlow/Keras for trained model loading
+try:
+    import tensorflow as tf
+    from tensorflow import keras
+    TF_AVAILABLE = True
+except (ImportError, AttributeError) as e:
+    print(f"⚠️ TensorFlow not available: {e}")
+    TF_AVAILABLE = False
+    tf = None
+    keras = None
+
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
@@ -138,7 +149,34 @@ def load_models_for_api():
             models_status['segmentation'] = f"⚠️ Model not found, using yolov8n-seg"
 
         # Load material classification model
-        if TORCH_AVAILABLE and models is not None:
+        if TF_AVAILABLE and tf is not None and keras is not None:
+            try:
+                # Try to load trained .h5 model
+                material_h5_path = os.path.join(script_dir, "materialclassification_model/material_classifier.h5")
+                if os.path.exists(material_h5_path):
+                    material_model = keras.models.load_model(material_h5_path)
+                    material_model.trainable = False
+                    models_status['material'] = f"✅ Trained material classifier loaded from .h5 ({os.path.getsize(material_h5_path)/1e6:.1f}MB)"
+                    print(f"✅ Loaded trained material classifier from: {material_h5_path}")
+                else:
+                    # Try .tflite model as fallback
+                    material_tflite_path = os.path.join(script_dir, "materialclassification_model/material_classifier.tflite")
+                    if os.path.exists(material_tflite_path):
+                        interpreter = tf.lite.Interpreter(model_path=material_tflite_path)
+                        interpreter.allocate_tensors()
+                        material_model = interpreter
+                        models_status['material'] = f"✅ Trained material classifier loaded from .tflite ({os.path.getsize(material_tflite_path)/1e6:.1f}MB)"
+                        print(f"✅ Loaded trained material classifier from: {material_tflite_path}")
+                    else:
+                        print(f"⚠️ No trained material classifier found at {material_h5_path} or {material_tflite_path}")
+                        material_model = None
+                        models_status['material'] = "⚠️ Trained model not found, will use fallback method"
+            except Exception as e:
+                print(f"⚠️ Failed to load trained material model: {e}")
+                material_model = None
+                models_status['material'] = f"⚠️ Trained model load failed: {e}"
+        elif TORCH_AVAILABLE and models is not None:
+            # Fallback to PyTorch MobileNetV2 if TensorFlow not available
             try:
                 material_model = models.mobilenet_v2(weights='IMAGENET1K_V1')
                 material_model.classifier = nn.Sequential(
@@ -146,14 +184,14 @@ def load_models_for_api():
                     nn.Linear(material_model.last_channel, 8)
                 )
                 material_model.eval()
-                models_status['material'] = "✅ Material classifier loaded"
-                print("✅ Loaded material classification model")
+                models_status['material'] = "✅ Material classifier loaded (PyTorch MobileNetV2 fallback)"
+                print("✅ Loaded material classification model (PyTorch fallback)")
             except Exception as e:
                 print(f"⚠️ Failed to load material model: {e}")
                 material_model = None
                 models_status['material'] = f"⚠️ Material model failed: {e}"
         else:
-            models_status['material'] = "⚠️ PyTorch not available for material model"
+            models_status['material'] = "⚠️ TensorFlow and PyTorch not available for material model"
             
         return yolo_model, segmentation_model, material_model, models_status
     except Exception as e:
@@ -491,27 +529,67 @@ def classify_material(image_np, model=None):
                 st.warning("⚠ Material classification model not loaded. Using texture-based fallback.")
             return classify_material_fallback(image_np)
 
-        transform = transforms.Compose([
-            transforms.ToPILImage(),
-            transforms.Resize((224, 224)),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-        ])
+        # Check if it's a TensorFlow model
+        if TF_AVAILABLE and tf is not None and isinstance(model, (keras.Model, tf.lite.Interpreter)):
+            try:
+                # Preprocessing for TensorFlow model
+                image_rgb = cv2.cvtColor(image_np, cv2.COLOR_BGR2RGB)
+                image_resized = cv2.resize(image_rgb, (224, 224))
+                image_array = image_resized.astype('float32') / 255.0
+                image_batch = np.expand_dims(image_array, axis=0)
+                
+                if isinstance(model, keras.Model):
+                    # Keras model prediction
+                    output = model.predict(image_batch, verbose=0)
+                    probabilities = output[0]
+                else:
+                    # TFLite interpreter prediction
+                    input_details = model.get_input_details()
+                    output_details = model.get_output_details()
+                    model.set_tensor(input_details[0]['index'], image_batch)
+                    model.invoke()
+                    probabilities = model.get_tensor(output_details[0]['index'])[0]
+                
+                if isinstance(probabilities, np.ndarray):
+                    probabilities = np.squeeze(probabilities)
+                
+                predicted_index = np.argmax(probabilities)
+                predicted_material = material_classes[predicted_index]
+                
+                if probabilities[predicted_index] < 0.5:
+                    return classify_material_fallback(image_np)
+                
+                return predicted_material, probabilities
+            except Exception as e:
+                print(f"⚠️ TensorFlow model prediction failed: {e}")
+                return classify_material_fallback(image_np)
+        
+        # PyTorch model (fallback)
+        elif TORCH_AVAILABLE and torch is not None:
+            transform = transforms.Compose([
+                transforms.ToPILImage(),
+                transforms.Resize((224, 224)),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+            ])
 
-        image_rgb = cv2.cvtColor(image_np, cv2.COLOR_BGR2RGB)
-        image_tensor = transform(image_rgb).unsqueeze(0)
+            image_rgb = cv2.cvtColor(image_np, cv2.COLOR_BGR2RGB)
+            image_tensor = transform(image_rgb).unsqueeze(0)
 
-        with torch.no_grad():
-            output = model(image_tensor)
-            probabilities = torch.softmax(output, dim=1)[0].cpu().numpy()
+            with torch.no_grad():
+                output = model(image_tensor)
+                probabilities = torch.softmax(output, dim=1)[0].cpu().numpy()
 
-        predicted_index = np.argmax(probabilities)
-        predicted_material = material_classes[predicted_index]
+            predicted_index = np.argmax(probabilities)
+            predicted_material = material_classes[predicted_index]
 
-        if probabilities[predicted_index] < 0.5:
+            if probabilities[predicted_index] < 0.5:
+                return classify_material_fallback(image_np)
+
+            return predicted_material, probabilities
+        else:
             return classify_material_fallback(image_np)
 
-        return predicted_material, probabilities
     except Exception as e:
         if __name__ == "__main__":
             st.error(f"❌ Model-based classification failed: {e}")

@@ -40,8 +40,13 @@ COPY *.py ./
 # The Python app will check if actual model files exist and fall back to defaults if needed
 RUN mkdir -p /app/runs/detect/train/weights /app/runs/detect/train3/weights && \
     mkdir -p /app/segmentation_model/weights && \
+    mkdir -p /app/materialclassification_model && \
     mkdir -p /app/frontend/src /app/frontend/public && \
     mkdir -p /app/__pycache__
+
+# Copy trained material classifier models if available
+COPY materialclassification_model/*.h5 /app/materialclassification_model/ 2>/dev/null || true
+COPY materialclassification_model/*.tflite /app/materialclassification_model/ 2>/dev/null || true
 
 # Note: Model files in Git LFS will be downloaded during git clone with git-lfs installed
 # If git-lfs doesn't download them during clone, the Python app has graceful fallback to defaults

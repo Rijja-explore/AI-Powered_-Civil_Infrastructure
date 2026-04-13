@@ -19,6 +19,16 @@ MODEL_FILES = {
         'filename': 'segmentation_best.pt',
         'dest_dir': 'segmentation_model/weights',
         'dest_filename': 'best.pt'
+    },
+    'material_classifier_h5': {
+        'filename': 'material_classifier.h5',
+        'dest_dir': 'materialclassification_model',
+        'dest_filename': 'material_classifier.h5'
+    },
+    'material_classifier_tflite': {
+        'filename': 'material_classifier.tflite',
+        'dest_dir': 'materialclassification_model',
+        'dest_filename': 'material_classifier.tflite'
     }
 }
 
