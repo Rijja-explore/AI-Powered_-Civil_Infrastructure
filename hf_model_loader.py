@@ -29,6 +29,21 @@ MODEL_FILES = {
         'filename': 'material_classifier.tflite',
         'dest_dir': 'materialclassification_model',
         'dest_filename': 'material_classifier.tflite'
+    },
+    'sdg_image': {
+        'filename': 'sdg.png',
+        'dest_dir': 'frontend/src/assets',
+        'dest_filename': 'sdg.png'
+    },
+    'sdg9_image': {
+        'filename': 'sdg9.png',
+        'dest_dir': 'frontend/src/assets',
+        'dest_filename': 'sdg9.png'
+    },
+    'sdg11_image': {
+        'filename': 'sdg11.png',
+        'dest_dir': 'frontend/src/assets',
+        'dest_filename': 'sdg11.png'
     }
 }
 
