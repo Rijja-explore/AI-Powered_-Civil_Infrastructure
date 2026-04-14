@@ -42,13 +42,13 @@ function App() {
         {/* Uploaded Logos - Corner Layout */}
         <div style={{ position: 'absolute', top: '20px', right: '20px', display: 'flex', gap: '1.2rem', zIndex: '20' }}>
           <div style={{ width: '80px', height: '80px', background: 'rgba(255,255,255,0.15)', borderRadius: '12px', border: '2px solid rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)', boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}>
-            <img src="sdg9.png" alt="SDG 9" style={{ width: '68px', height: '68px', objectFit: 'contain' }} onError={(e) => e.target.src='https://placehold.co/70x70?text=SDG9'} />
+            <img src="/sdg9.png" alt="SDG 9" style={{ width: '68px', height: '68px', objectFit: 'contain' }} />
           </div>
           <div style={{ width: '80px', height: '80px', background: 'rgba(255,255,255,0.15)', borderRadius: '12px', border: '2px solid rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)', boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}>
-            <img src="sdg.png" alt="SDG" style={{ width: '68px', height: '68px', objectFit: 'contain' }} onError={(e) => e.target.src='https://placehold.co/70x70?text=SDG'} />
+            <img src="/sdg.png" alt="SDG" style={{ width: '68px', height: '68px', objectFit: 'contain' }} />
           </div>
           <div style={{ width: '80px', height: '80px', background: 'rgba(255,255,255,0.15)', borderRadius: '12px', border: '2px solid rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)', boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}>
-            <img src="sdg11.png" alt="SDG 11" style={{ width: '68px', height: '68px', objectFit: 'contain' }} onError={(e) => e.target.src='https://placehold.co/70x70?text=SDG11'} />
+            <img src="/sdg11.png" alt="SDG 11" style={{ width: '68px', height: '68px', objectFit: 'contain' }} />
           </div>
         </div>
 
