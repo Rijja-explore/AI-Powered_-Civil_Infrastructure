@@ -805,8 +805,6 @@ h1, h2, h3, h4, h5, h6 {
   right: 5%;
   animation: float-slow 7s ease-in-out infinite;
 }
-  animation: float-slow 7s ease-in-out infinite;
-}
 
 @media (max-width: 768px) {
   .card-1, .card-2, .card-3 {
