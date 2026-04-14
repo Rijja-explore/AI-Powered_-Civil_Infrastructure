@@ -523,8 +523,33 @@ h1, h2, h3, h4, h5, h6 {
 @media (max-width: 768px) {
   .hero-content {
     grid-template-columns: 1fr;
-    gap: 2rem;
-    padding: 1.5rem;
+    gap: 1.5rem;
+    padding: 1rem;
+  }
+  
+  .hero-section {
+    padding: 1rem;
+    min-height: auto;
+  }
+  
+  .floating-elements {
+    position: relative !important;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    height: auto !important;
+    width: 100%;
+    align-items: center;
+    margin-top: 1rem;
+  }
+  
+  .card-1, .card-2, .card-3 {
+    position: static !important;
+    animation: none !important;
+    transform: none !important;
+    margin: 0 !important;
+    width: 90%;
+    max-width: 300px;
   }
 }
 
@@ -759,12 +784,12 @@ h1, h2, h3, h4, h5, h6 {
 
 .card-1 {
   top: 50%;
-  left: 8%;
+  left: 5%;
   animation: float-slow 6s ease-in-out infinite;
 }
 
 .card-2 {
-  top: 55%;
+  top: 48%;
   left: 50%;
   transform: translateX(-50%);
   animation: float-slow 6.5s ease-in-out infinite;
@@ -772,8 +797,27 @@ h1, h2, h3, h4, h5, h6 {
 
 .card-3 {
   top: 50%;
-  right: 8%;
+  right: 5%;
   animation: float-slow 7s ease-in-out infinite;
+}
+
+@media (max-width: 768px) {
+  .card-1, .card-2, .card-3 {
+    position: static !important;
+    animation: none !important;
+    transform: none !important;
+    margin: 1rem auto;
+  }
+  
+  .floating-elements {
+    position: relative !important;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    height: auto !important;
+    width: 100%;
+    align-items: center;
+  }
 }
 
 .card-4 {
@@ -3458,6 +3502,16 @@ h1, h2, h3, h4, h5, h6 {
   
   .dashboard-container {
     padding: 1rem;
+    min-height: auto;
+    margin-top: 0;
+  }
+  
+  .nav-tabs-container {
+    margin-bottom: 1rem;
+  }
+  
+  .card {
+    margin-bottom: 1rem;
   }
 }
 

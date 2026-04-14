@@ -85,16 +85,22 @@ function App() {
         {/* Logo Badge - Static Corner */}
         <div className="logo-badge-static">
           <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-            <text x="50" y="35" textAnchor="middle" fontSize="14" fontWeight="bold" fill="#2563eb" stroke="#000000" strokeWidth="0.5">InfraVision</text>
-            <text x="50" y="55" textAnchor="middle" fontSize="12" fontWeight="bold" fill="#06b6d4" stroke="#000000" strokeWidth="0.5">AI</text>
+            <text x="50" y="35" textAnchor="middle" fontSize="14" fontWeight="bold" fill="#2563eb" stroke="#000000" strokeWidth="1" paintOrder="stroke">InfraVision</text>
+            <text x="50" y="55" textAnchor="middle" fontSize="12" fontWeight="bold" fill="#06b6d4" stroke="#000000" strokeWidth="1" paintOrder="stroke">AI</text>
           </svg>
         </div>
 
-        {/* Uploaded Logos - Top Right Corner */}
-        <div style={{ position: 'absolute', top: '130px', right: '1rem', display: 'flex', gap: '1rem', zIndex: '14' }}>
-          <img src="/sdg9.png" alt="Logo 1" style={{ width: '90px', height: '90px', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.2)', objectFit: 'cover' }} />
-          <img src="/sdg.png" alt="Logo 2" style={{ width: '90px', height: '90px', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.2)', objectFit: 'cover' }} />
-          <img src="/sdg11.png" alt="Logo 3" style={{ width: '90px', height: '90px', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.2)', objectFit: 'cover' }} />
+        {/* Uploaded Logos - Horizontal Layout */}
+        <div style={{ position: 'absolute', top: '130px', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '1.5rem', zIndex: '14', justifyContent: 'center' }}>
+          <div style={{ width: '100px', height: '100px', background: 'rgba(255,255,255,0.1)', borderRadius: '12px', border: '2px solid rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <img src="/sdg9.png" alt="Logo 1" style={{ width: '90px', height: '90px', borderRadius: '10px', objectFit: 'cover' }} />
+          </div>
+          <div style={{ width: '100px', height: '100px', background: 'rgba(255,255,255,0.1)', borderRadius: '12px', border: '2px solid rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <img src="/sdg.png" alt="Logo 2" style={{ width: '90px', height: '90px', borderRadius: '10px', objectFit: 'cover' }} />
+          </div>
+          <div style={{ width: '100px', height: '100px', background: 'rgba(255,255,255,0.1)', borderRadius: '12px', border: '2px solid rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <img src="/sdg11.png" alt="Logo 3" style={{ width: '90px', height: '90px', borderRadius: '10px', objectFit: 'cover' }} />
+          </div>
         </div>
       </section>
 
