@@ -565,7 +565,13 @@ h1, h2, h3, h4, h5, h6 {
   align-items: center;
   gap: 1rem;
   color: #ffffff !important;
-  text-shadow: 0 0 30px rgba(255, 255, 255, 0.8), 0 0 60px rgba(59, 130, 246, 0.5), 0 4px 20px rgba(255, 255, 255, 0.3);
+  text-shadow: 
+    -1px -1px 0 #000,  
+     1px -1px 0 #000,
+    -1px  1px 0 #000,
+     1px  1px 0 #000,
+    0 0 30px rgba(255, 255, 255, 0.8), 
+    0 0 60px rgba(59, 130, 246, 0.5);
   filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.6));
   position: relative;
   letter-spacing: -1px;
@@ -783,21 +789,22 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .card-1 {
-  top: 50%;
-  left: 5%;
+  top: 15%;
+  right: 5%;
   animation: float-slow 6s ease-in-out infinite;
 }
 
 .card-2 {
-  top: 48%;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 45%;
+  right: 15%;
   animation: float-slow 6.5s ease-in-out infinite;
 }
 
 .card-3 {
-  top: 50%;
+  top: 75%;
   right: 5%;
+  animation: float-slow 7s ease-in-out infinite;
+}
   animation: float-slow 7s ease-in-out infinite;
 }
 
