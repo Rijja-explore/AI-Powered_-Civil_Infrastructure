@@ -560,21 +560,21 @@ h1, h2, h3, h4, h5, h6 {
 .hero-title {
   font-size: 4.5rem;
   font-weight: 900;
-  margin-bottom: 2rem;
+  margin-bottom: 0.5rem; /* Minimized margin */
   display: flex;
   align-items: center;
   gap: 1rem;
   color: #000000 !important; /* Force to Black */
   text-shadow: 
-    -3px -3px 0 #000,  /* Thickest Border */
-     3px -3px 0 #000,
-    -3px  3px 0 #000,
-     3px  3px 0 #000,
-    -3px  0px 0 #000,
-     3px  0px 0 #000,
-     0px -3px 0 #000,
-     0px  3px 0 #000;
-  filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.4));
+    -4px -4px 0 #000, /* Thicker Border */
+     4px -4px 0 #000,
+    -4px  4px 0 #000,
+     4px  4px 0 #000,
+    -4px  0px 0 #000,
+     4px  0px 0 #000,
+     0px -4px 0 #000,
+     0px  4px 0 #000;
+  filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.5));
   position: relative;
   letter-spacing: -2px;
   animation: fadeInUp 1s ease-out 0.2s both;
