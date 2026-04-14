@@ -433,7 +433,6 @@ const ImageAnalysis = () => {
                   <div className="image-card" style={{ padding: '1rem', background: 'var(--light)', borderRadius: 'var(--border-radius)', border: '1px solid var(--glass-border)' }}>
                     <div className="image-card-title" style={{ fontWeight: 600, marginBottom: '1rem', color: 'var(--dark)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       💧 Moisture/Dampness Heatmap
-                      <span style={{ fontSize: '0.65rem', color: '#3b82f6', fontWeight: 'bold', background: 'rgba(59, 130, 246, 0.2)', padding: '0.25rem 0.4rem', borderRadius: '3px' }}>NEW</span>
                     </div>
                     {outputImages?.moisture_dampness_heatmap ? (
                       <img src={outputImages.moisture_dampness_heatmap} alt="Moisture Heatmap" style={{ width: '100%', height: '300px', objectFit: 'cover', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
@@ -445,7 +444,6 @@ const ImageAnalysis = () => {
                   <div className="image-card" style={{ padding: '1rem', background: 'var(--light)', borderRadius: 'var(--border-radius)', border: '1px solid var(--glass-border)' }}>
                     <div className="image-card-title" style={{ fontWeight: 600, marginBottom: '1rem', color: 'var(--dark)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       🔴 Structural Stress Map
-                      <span style={{ fontSize: '0.65rem', color: '#dc2626', fontWeight: 'bold', background: 'rgba(220, 38, 38, 0.2)', padding: '0.25rem 0.4rem', borderRadius: '3px' }}>NEW</span>
                     </div>
                     {outputImages?.structural_stress_map ? (
                       <img src={outputImages.structural_stress_map} alt="Stress Map" style={{ width: '100%', height: '300px', objectFit: 'cover', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
@@ -457,7 +455,6 @@ const ImageAnalysis = () => {
                   <div className="image-card" style={{ padding: '1rem', background: 'var(--light)', borderRadius: 'var(--border-radius)', border: '1px solid var(--glass-border)' }}>
                     <div className="image-card-title" style={{ fontWeight: 600, marginBottom: '1rem', color: 'var(--dark)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       🔥 Thermal/Infrared Simulation
-                      <span style={{ fontSize: '0.65rem', color: '#f97316', fontWeight: 'bold', background: 'rgba(249, 115, 22, 0.2)', padding: '0.25rem 0.4rem', borderRadius: '3px' }}>NEW</span>
                     </div>
                     {outputImages?.thermal_infrared_simulation ? (
                       <img src={outputImages.thermal_infrared_simulation} alt="Thermal Map" style={{ width: '100%', height: '300px', objectFit: 'cover', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />

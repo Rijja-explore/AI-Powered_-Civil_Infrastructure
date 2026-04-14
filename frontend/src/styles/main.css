@@ -85,13 +85,6 @@
   --gradient-ai: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
   --gradient-overlay: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
   
-  /* Enhanced Text Colors */
-  --text-primary: #ffffff;
-  --text-secondary: #cbd5e1;
-  --text-tertiary: #94a3b8;
-  --text-dark: #1e293b;
-  --text-light: #f1f5f9;
-  
   /* Enhanced Border Radius */
   --border-radius: 8px;
   --border-radius-lg: 12px;
@@ -4217,24 +4210,34 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .footer-bottom {
-  border-top: 2px solid rgba(37, 99, 235, 0.15);
-  padding-top: 2rem;
+  border-top: 2px solid rgba(37, 99, 235, 0.2);
+  padding-top: 2.5rem;
   text-align: center;
-  background: linear-gradient(180deg, transparent, rgba(37, 99, 235, 0.02));
-  margin: 0 2rem;
-  padding-bottom: 1rem;
+  background: linear-gradient(180deg, rgba(37, 99, 235, 0.02), transparent);
+  margin: 2rem 2rem 0 2rem;
+  padding-bottom: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.footer-bottom::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(37, 99, 235, 0.2), transparent);
 }
 
 .footer-bottom p {
-  color: #64748b;
-  font-size: 0.9rem;
+  color: #475569;
+  font-size: 0.95rem;
   margin: 0;
   font-weight: 600;
-  letter-spacing: 0.2px;
-  background: linear-gradient(135deg, #2563eb, #06b6d4);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  letter-spacing: 0.3px;
+  position: relative;
+  z-index: 1;
 }
 
 /* Responsive Footer */
