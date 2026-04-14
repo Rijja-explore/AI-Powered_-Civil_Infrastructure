@@ -78,10 +78,6 @@ function App() {
                 <BarChart3 size={32} />
                 <span>Smart Insights</span>
               </div>
-              <div className="floating-card card-4">
-                <Leaf size={32} />
-                <span>Eco Impact</span>
-              </div>
             </div>
           </div>
         </div>
