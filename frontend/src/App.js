@@ -93,9 +93,6 @@ function App() {
             <text x="50" y="55" textAnchor="middle" fontSize="12" fontWeight="bold" fill="#06b6d4">AI</text>
           </svg>
         </div>
-        </div>
-
-
       </section>
 
       {/* Main Dashboard */}
