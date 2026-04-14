@@ -560,22 +560,24 @@ h1, h2, h3, h4, h5, h6 {
 .hero-title {
   font-size: 4.5rem;
   font-weight: 900;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
   display: flex;
   align-items: center;
   gap: 1rem;
   color: #ffffff !important;
   text-shadow: 
-    -1px -1px 0 #000,  
-     1px -1px 0 #000,
-    -1px  1px 0 #000,
-     1px  1px 0 #000,
-    0 0 30px rgba(255, 255, 255, 0.8), 
-    0 0 60px rgba(59, 130, 246, 0.5);
-  filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.6));
+    -2px -2px 0 #000,  
+     2px -2px 0 #000,
+    -2px  2px 0 #000,
+     2px  2px 0 #000,
+    -2px  0px 0 #000,
+     2px  0px 0 #000,
+     0px -2px 0 #000,
+     0px  2px 0 #000;
+  filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.3));
   position: relative;
-  letter-spacing: -1px;
-  animation: fadeInUp 1s ease-out 0.2s both, whiteGlow 3s ease-in-out infinite;
+  letter-spacing: -2px;
+  animation: fadeInUp 1s ease-out 0.2s both;
   word-break: break-word;
 }
 
