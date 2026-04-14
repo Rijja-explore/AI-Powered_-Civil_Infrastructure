@@ -85,8 +85,8 @@ function App() {
         {/* Logo Badge - Static Corner */}
         <div className="logo-badge-static">
           <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-            <text x="50" y="35" textAnchor="middle" fontSize="14" fontWeight="bold" fill="#2563eb">InfraVision</text>
-            <text x="50" y="55" textAnchor="middle" fontSize="12" fontWeight="bold" fill="#06b6d4">AI</text>
+            <text x="50" y="35" textAnchor="middle" fontSize="14" fontWeight="bold" fill="#2563eb" stroke="#000000" strokeWidth="0.5">InfraVision</text>
+            <text x="50" y="55" textAnchor="middle" fontSize="12" fontWeight="bold" fill="#06b6d4" stroke="#000000" strokeWidth="0.5">AI</text>
           </svg>
         </div>
 

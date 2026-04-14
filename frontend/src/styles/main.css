@@ -758,21 +758,21 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .card-1 {
-  top: 10%;
-  left: 5%;
+  top: 50%;
+  left: 8%;
   animation: float-slow 6s ease-in-out infinite;
 }
 
 .card-2 {
-  top: 5%;
+  top: 55%;
   left: 50%;
   transform: translateX(-50%);
   animation: float-slow 6.5s ease-in-out infinite;
 }
 
 .card-3 {
-  top: 10%;
-  right: 5%;
+  top: 50%;
+  right: 8%;
   animation: float-slow 7s ease-in-out infinite;
 }
 
