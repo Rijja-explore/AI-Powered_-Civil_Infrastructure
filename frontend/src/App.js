@@ -67,28 +67,32 @@ function App() {
           <div className="hero-visual">
             <div className="floating-elements">
               <div className="floating-card card-1">
-                <Camera size={32} />
-                <span>Live Analysis</span>
+                <Camera size={28} />
+                <span>Analysis</span>
               </div>
               <div className="floating-card card-2">
-                <Activity size={32} />
-                <span>Real-time Data</span>
+                <Activity size={28} />
+                <span>Monitoring</span>
               </div>
               <div className="floating-card card-3">
-                <BarChart3 size={32} />
-                <span>Smart Insights</span>
+                <BarChart3 size={28} />
+                <span>Insights</span>
               </div>
-              <div className="floating-card card-4 sdg-card sdg-9">
-                <img src="/sdg9.png" alt="SDG 9" />
-              </div>
-              <div className="floating-card card-5 sdg-card sdg-11">
-                <img src="/sdg11.png" alt="SDG 11" />
-              </div>
-              <div className="floating-card card-6 sdg-card sdg-13">
-                <img src="/sdg.png" alt="SDG 13" />
+              <div className="floating-card card-4">
+                <Leaf size={28} />
+                <span>Eco Impact</span>
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Logo Badge - Static Corner */}
+        <div className="logo-badge-static">
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <text x="50" y="35" textAnchor="middle" fontSize="14" fontWeight="bold" fill="#2563eb">InfraVision</text>
+            <text x="50" y="55" textAnchor="middle" fontSize="12" fontWeight="bold" fill="#06b6d4">AI</text>
+          </svg>
+        </div>
         </div>
 
 
