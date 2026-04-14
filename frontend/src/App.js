@@ -67,15 +67,15 @@ function App() {
           <div className="hero-visual">
             <div className="floating-elements">
               <div className="floating-card card-1">
-                <Camera size={28} />
+                <Camera size={40} />
                 <span>Analysis</span>
               </div>
               <div className="floating-card card-2">
-                <Activity size={28} />
+                <Activity size={40} />
                 <span>Monitoring</span>
               </div>
               <div className="floating-card card-3">
-                <BarChart3 size={28} />
+                <BarChart3 size={40} />
                 <span>Insights</span>
               </div>
             </div>
@@ -90,17 +90,11 @@ function App() {
           </svg>
         </div>
 
-        {/* SDG Logos - Top Right Corner */}
-        <div style={{ position: 'absolute', top: '120px', right: '1rem', display: 'flex', gap: '0.8rem', zIndex: '14' }}>
-          <div style={{ width: '80px', height: '80px', background: '#DD1C3D', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.2)' }}>
-            <span style={{ fontSize: '32px', fontWeight: 'bold', color: 'white' }}>9</span>
-          </div>
-          <div style={{ width: '80px', height: '80px', background: '#FCC30B', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.2)' }}>
-            <span style={{ fontSize: '32px', fontWeight: 'bold', color: '#333' }}>11</span>
-          </div>
-          <div style={{ width: '80px', height: '80px', background: '#3F7E44', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.2)' }}>
-            <span style={{ fontSize: '32px', fontWeight: 'bold', color: 'white' }}>13</span>
-          </div>
+        {/* Uploaded Logos - Top Right Corner */}
+        <div style={{ position: 'absolute', top: '130px', right: '1rem', display: 'flex', gap: '1rem', zIndex: '14' }}>
+          <img src="/sdg9.png" alt="Logo 1" style={{ width: '90px', height: '90px', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.2)', objectFit: 'cover' }} />
+          <img src="/sdg.png" alt="Logo 2" style={{ width: '90px', height: '90px', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.2)', objectFit: 'cover' }} />
+          <img src="/sdg11.png" alt="Logo 3" style={{ width: '90px', height: '90px', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.2)', objectFit: 'cover' }} />
         </div>
       </section>
 
