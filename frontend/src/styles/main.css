@@ -791,22 +791,30 @@ h1, h2, h3, h4, h5, h6 {
 .card-1 {
   top: 50%;
   right: 5%;
-  transform: translateY(-200%); /* Significantly pushed up */
-  animation: float-slow 6s ease-in-out infinite;
+  transform: translateY(-240%); /* Increased separation */
 }
 
 .card-2 {
   top: 50%;
-  right: 20%; /* Pronounced tip of the V */
+  right: 25%; /* More pronounced V tip */
   transform: translateY(-50%);
-  animation: float-slow 6.5s ease-in-out infinite;
 }
 
 .card-3 {
   top: 50%;
   right: 5%;
-  transform: translateY(100%); /* Significantly pushed down */
-  animation: float-slow 7s ease-in-out infinite;
+  transform: translateY(140%); /* Increased separation */
+}
+
+/* Base floating elements common styles */
+.card-1, .card-2, .card-3 {
+  position: absolute;
+  animation: float-base 8s ease-in-out infinite;
+}
+
+@keyframes float-base {
+  0%, 100% { margin-top: 0px; }
+  50% { margin-top: -20px; }
 }
 
 @media (max-width: 768px) {
