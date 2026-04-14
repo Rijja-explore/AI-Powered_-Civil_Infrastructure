@@ -19,20 +19,7 @@ function App() {
     alertsCount: 0
   });
 
-  // Simulate real-time status updates
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setSystemStatus(prev => ({
-        ...prev,
-        backendConnected: Math.random() > 0.1, // 90% uptime
-        lastAnalysis: new Date(),
-        activeStreams: Math.floor(Math.random() * 3),
-        alertsCount: Math.floor(Math.random() * 5)
-      }));
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, []);
+  // Status updates removed - footer only shows copyright
 
   const routes = [
     { id: 'image-analysis', label: 'Image Analysis', Icon: Camera, Component: ImageAnalysis, description: 'AI-powered crack detection & material analysis' },
@@ -90,37 +77,7 @@ function App() {
           </div>
         </div>
 
-        {/* Real-time Status Bar */}
-        <div className="status-bar">
-          <div className="status-item">
-            {systemStatus.backendConnected ? (
-              <Wifi className="status-icon connected" size={16} />
-            ) : (
-              <WifiOff className="status-icon disconnected" size={16} />
-            )}
-            <span className="status-text">
-              Backend: {systemStatus.backendConnected ? 'Connected' : 'Disconnected'}
-            </span>
-          </div>
-          <div className="status-item">
-            <Clock className="status-icon" size={16} />
-            <span className="status-text">
-              Last Analysis: {systemStatus.lastAnalysis ? systemStatus.lastAnalysis.toLocaleTimeString() : 'Never'}
-            </span>
-          </div>
-          <div className="status-item">
-            <Activity className="status-icon" size={16} />
-            <span className="status-text">
-              Active Streams: {systemStatus.activeStreams}
-            </span>
-          </div>
-          <div className="status-item">
-            <AlertTriangle className={`status-icon ${systemStatus.alertsCount > 0 ? 'alert' : ''}`} size={16} />
-            <span className="status-text">
-              Alerts: {systemStatus.alertsCount}
-            </span>
-          </div>
-        </div>
+
       </section>
 
       {/* Main Dashboard */}
@@ -155,38 +112,8 @@ function App() {
 
       {/* Footer */}
       <footer className="app-footer">
-        <div className="footer-content">
-          <div className="footer-section">
-            <h4>AI-Powered Structural Health Monitor</h4>
-            <p>Advanced AI technology for civil infrastructure health assessment and monitoring worldwide.</p>
-            <div className="footer-links">
-              <a href="#privacy">Privacy Policy</a>
-              <a href="#terms">Terms of Service</a>
-              <a href="#contact">Contact Us</a>
-            </div>
-          </div>
-          <div className="footer-section">
-            <h4>Technology</h4>
-            <p>Built with React, Python, and advanced AI/ML models for structural health monitoring.</p>
-            <div className="tech-stack">
-              <span className="tech-badge">YOLOv8</span>
-              <span className="tech-badge">OpenCV</span>
-              <span className="tech-badge">TensorFlow</span>
-              <span className="tech-badge">Flask</span>
-            </div>
-          </div>
-          <div className="footer-section">
-            <h4>Connect</h4>
-            <p>Follow us for updates on structural health monitoring technology.</p>
-            <div className="social-links">
-              <a href="#github" className="social-link">GitHub</a>
-              <a href="#linkedin" className="social-link">LinkedIn</a>
-              <a href="#research" className="social-link">Research</a>
-            </div>
-          </div>
-        </div>
         <div className="footer-bottom">
-          <p>&copy; 2024 AI-Powered Structural Health Monitor. All rights reserved. | Powered by AI for Infrastructure Safety</p>
+          <p>&copy; 2026 Rijja H and Rohith Varshighan S</p>
         </div>
       </footer>
     </div>
