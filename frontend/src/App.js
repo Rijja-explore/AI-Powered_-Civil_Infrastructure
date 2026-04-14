@@ -3,6 +3,11 @@ import { Camera, Video, Activity, BarChart3, Leaf, Shield, Zap, Eye, Wifi, WifiO
 import './styles/main.css';
 import './styles/mobile-responsive.css';
 
+// Import Assets
+import sdgImg from './assets/sdg.png';
+import sdg9Img from './assets/sdg9.png';
+import sdg11Img from './assets/sdg11.png';
+
 // Import pages
 import ImageAnalysis from './pages/ImageAnalysis';
 import RealTimeMonitoring from './pages/RealTimeMonitoring';
@@ -42,13 +47,13 @@ function App() {
         {/* Uploaded Logos - Corner Layout */}
         <div style={{ position: 'absolute', top: '20px', right: '20px', display: 'flex', gap: '1.2rem', zIndex: '20' }}>
           <div style={{ width: '80px', height: '80px', background: 'rgba(255,255,255,0.15)', borderRadius: '12px', border: '2px solid rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)', boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}>
-            <img src="/sdg9.png" alt="SDG 9" style={{ width: '68px', height: '68px', objectFit: 'contain' }} />
+            <img src={sdg9Img} alt="SDG 9" style={{ width: '68px', height: '68px', objectFit: 'contain' }} />
           </div>
           <div style={{ width: '80px', height: '80px', background: 'rgba(255,255,255,0.15)', borderRadius: '12px', border: '2px solid rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)', boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}>
-            <img src="/sdg.png" alt="SDG" style={{ width: '68px', height: '68px', objectFit: 'contain' }} />
+            <img src={sdgImg} alt="SDG" style={{ width: '68px', height: '68px', objectFit: 'contain' }} />
           </div>
           <div style={{ width: '80px', height: '80px', background: 'rgba(255,255,255,0.15)', borderRadius: '12px', border: '2px solid rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)', boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}>
-            <img src="/sdg11.png" alt="SDG 11" style={{ width: '68px', height: '68px', objectFit: 'contain' }} />
+            <img src={sdg11Img} alt="SDG 11" style={{ width: '68px', height: '68px', objectFit: 'contain' }} />
           </div>
         </div>
 

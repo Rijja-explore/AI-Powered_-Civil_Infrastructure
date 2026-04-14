@@ -793,19 +793,19 @@ h1, h2, h3, h4, h5, h6 {
 .card-1 {
   top: 50%;
   right: 5%;
-  transform: translateY(-240%); /* Increased separation */
+  transform: translateY(-160%); /* Closer but no overlap */
 }
 
 .card-2 {
   top: 50%;
-  right: 25%; /* More pronounced V tip */
+  right: 20%; /* Closer V tip */
   transform: translateY(-50%);
 }
 
 .card-3 {
   top: 50%;
   right: 5%;
-  transform: translateY(140%); /* Increased separation */
+  transform: translateY(60%); /* Closer but no overlap */
 }
 
 /* Base floating elements common styles */
