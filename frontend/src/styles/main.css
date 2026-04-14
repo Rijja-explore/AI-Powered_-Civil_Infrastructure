@@ -790,22 +790,22 @@ h1, h2, h3, h4, h5, h6 {
 
 .card-1 {
   top: 50%;
-  right: 25%;
-  transform: translateY(-130%);
+  right: 5%;
+  transform: translateY(-160%);
   animation: float-slow 6s ease-in-out infinite;
 }
 
 .card-2 {
   top: 50%;
-  right: 15%;
+  right: 25%;
   transform: translateY(-50%);
   animation: float-slow 6.5s ease-in-out infinite;
 }
 
 .card-3 {
   top: 50%;
-  right: 25%;
-  transform: translateY(30%);
+  right: 5%;
+  transform: translateY(60%);
   animation: float-slow 7s ease-in-out infinite;
 }
 

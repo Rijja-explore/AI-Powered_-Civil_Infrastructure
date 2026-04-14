@@ -40,15 +40,15 @@ function App() {
         <div className="hero-overlay"></div>
         
         {/* Uploaded Logos - Corner Layout */}
-        <div style={{ position: 'absolute', top: '20px', right: '20px', display: 'flex', gap: '1rem', zIndex: '20' }}>
-          <div style={{ width: '80px', height: '80px', background: 'rgba(255,255,255,0.1)', borderRadius: '12px', border: '2px solid rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <img src="sdg9.png" alt="SDG 9" style={{ width: '70px', height: '70px', borderRadius: '8px', objectFit: 'contain' }} />
+        <div style={{ position: 'absolute', top: '20px', right: '20px', display: 'flex', gap: '1.2rem', zIndex: '20' }}>
+          <div style={{ width: '80px', height: '80px', background: 'rgba(255,255,255,0.15)', borderRadius: '12px', border: '2px solid rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)', boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}>
+            <img src="sdg9.png" alt="SDG 9" style={{ width: '68px', height: '68px', objectFit: 'contain' }} onError={(e) => e.target.src='https://placehold.co/70x70?text=SDG9'} />
           </div>
-          <div style={{ width: '80px', height: '80px', background: 'rgba(255,255,255,0.1)', borderRadius: '12px', border: '2px solid rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <img src="sdg.png" alt="SDG" style={{ width: '70px', height: '70px', borderRadius: '8px', objectFit: 'contain' }} />
+          <div style={{ width: '80px', height: '80px', background: 'rgba(255,255,255,0.15)', borderRadius: '12px', border: '2px solid rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)', boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}>
+            <img src="sdg.png" alt="SDG" style={{ width: '68px', height: '68px', objectFit: 'contain' }} onError={(e) => e.target.src='https://placehold.co/70x70?text=SDG'} />
           </div>
-          <div style={{ width: '80px', height: '80px', background: 'rgba(255,255,255,0.1)', borderRadius: '12px', border: '2px solid rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <img src="sdg11.png" alt="SDG 11" style={{ width: '70px', height: '70px', borderRadius: '8px', objectFit: 'contain' }} />
+          <div style={{ width: '80px', height: '80px', background: 'rgba(255,255,255,0.15)', borderRadius: '12px', border: '2px solid rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)', boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}>
+            <img src="sdg11.png" alt="SDG 11" style={{ width: '68px', height: '68px', objectFit: 'contain' }} onError={(e) => e.target.src='https://placehold.co/70x70?text=SDG11'} />
           </div>
         </div>
 
