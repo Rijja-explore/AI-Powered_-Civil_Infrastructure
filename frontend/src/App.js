@@ -42,13 +42,13 @@ function App() {
         {/* Uploaded Logos - Corner Layout */}
         <div style={{ position: 'absolute', top: '20px', right: '20px', display: 'flex', gap: '1rem', zIndex: '20' }}>
           <div style={{ width: '80px', height: '80px', background: 'rgba(255,255,255,0.1)', borderRadius: '12px', border: '2px solid rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <img src="/sdg9.png" alt="SDG 9" style={{ width: '70px', height: '70px', borderRadius: '8px', objectFit: 'contain' }} />
+            <img src="./sdg9.png" alt="SDG 9" style={{ width: '70px', height: '70px', borderRadius: '8px', objectFit: 'contain' }} />
           </div>
           <div style={{ width: '80px', height: '80px', background: 'rgba(255,255,255,0.1)', borderRadius: '12px', border: '2px solid rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <img src="/sdg.png" alt="SDG" style={{ width: '70px', height: '70px', borderRadius: '8px', objectFit: 'contain' }} />
+            <img src="./sdg.png" alt="SDG" style={{ width: '70px', height: '70px', borderRadius: '8px', objectFit: 'contain' }} />
           </div>
           <div style={{ width: '80px', height: '80px', background: 'rgba(255,255,255,0.1)', borderRadius: '12px', border: '2px solid rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <img src="/sdg11.png" alt="SDG 11" style={{ width: '70px', height: '70px', borderRadius: '8px', objectFit: 'contain' }} />
+            <img src="./sdg11.png" alt="SDG 11" style={{ width: '70px', height: '70px', borderRadius: '8px', objectFit: 'contain' }} />
           </div>
         </div>
 
