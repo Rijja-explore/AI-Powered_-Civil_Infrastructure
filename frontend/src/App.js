@@ -129,6 +129,7 @@ function App() {
       {/* Footer */}
       <footer className="app-footer">
         <div className="footer-bottom">
+          <p style={{ fontWeight: '500', marginBottom: '10px' }}>AI-Based Structural Health Monitoring & Assessment System</p>
           <div className="sdg-badges">
             <div className="sdg-badge" title="SDG 9: Industry, Innovation & Infrastructure">
               <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
@@ -143,13 +144,6 @@ function App() {
                 <text x="50" y="50" textAnchor="middle" dy=".3em" fontSize="24" fontWeight="bold" fill="#333">11</text>
               </svg>
               <span>SDG 11</span>
-            </div>
-            <div className="sdg-badge" title="SDG 13: Climate Action">
-              <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                <rect width="100" height="100" fill="#407D52"/>
-                <text x="50" y="50" textAnchor="middle" dy=".3em" fontSize="24" fontWeight="bold" fill="white">13</text>
-              </svg>
-              <span>SDG 13</span>
             </div>
           </div>
           <p>&copy; 2026 Rijja H and Rohith Varshighan S</p>

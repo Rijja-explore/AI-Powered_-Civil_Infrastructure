@@ -564,17 +564,17 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   align-items: center;
   gap: 1rem;
-  color: #ffffff !important;
+  color: #000000 !important; /* Force to Black */
   text-shadow: 
-    -2px -2px 0 #000,  
-     2px -2px 0 #000,
-    -2px  2px 0 #000,
-     2px  2px 0 #000,
-    -2px  0px 0 #000,
-     2px  0px 0 #000,
-     0px -2px 0 #000,
-     0px  2px 0 #000;
-  filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.3));
+    -3px -3px 0 #000,  /* Thickest Border */
+     3px -3px 0 #000,
+    -3px  3px 0 #000,
+     3px  3px 0 #000,
+    -3px  0px 0 #000,
+     3px  0px 0 #000,
+     0px -3px 0 #000,
+     0px  3px 0 #000;
+  filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.4));
   position: relative;
   letter-spacing: -2px;
   animation: fadeInUp 1s ease-out 0.2s both;
@@ -791,21 +791,21 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .card-1 {
-  top: 50%;
+  top: 55%; /* Pulled down */
   right: 5%;
-  transform: translateY(-160%); /* Closer but no overlap */
+  transform: translateY(-130%) scale(0.9); /* Reduced size */
 }
 
 .card-2 {
-  top: 50%;
-  right: 20%; /* Closer V tip */
-  transform: translateY(-50%);
+  top: 55%; /* Pulled down */
+  right: 18%; /* Pulled closer to text */
+  transform: translateY(-50%) scale(0.9); /* Reduced size */
 }
 
 .card-3 {
-  top: 50%;
+  top: 55%; /* Pulled down */
   right: 5%;
-  transform: translateY(60%); /* Closer but no overlap */
+  transform: translateY(30%) scale(0.9); /* Reduced size */
 }
 
 /* Base floating elements common styles */
