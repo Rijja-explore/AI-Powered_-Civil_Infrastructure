@@ -89,6 +89,19 @@ function App() {
             <text x="50" y="55" textAnchor="middle" fontSize="12" fontWeight="bold" fill="#06b6d4">AI</text>
           </svg>
         </div>
+
+        {/* SDG Logos - Top Right Corner */}
+        <div style={{ position: 'absolute', top: '120px', right: '1rem', display: 'flex', gap: '0.8rem', zIndex: '14' }}>
+          <div style={{ width: '80px', height: '80px', background: '#DD1C3D', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.2)' }}>
+            <span style={{ fontSize: '32px', fontWeight: 'bold', color: 'white' }}>9</span>
+          </div>
+          <div style={{ width: '80px', height: '80px', background: '#FCC30B', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.2)' }}>
+            <span style={{ fontSize: '32px', fontWeight: 'bold', color: '#333' }}>11</span>
+          </div>
+          <div style={{ width: '80px', height: '80px', background: '#3F7E44', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.2)' }}>
+            <span style={{ fontSize: '32px', fontWeight: 'bold', color: 'white' }}>13</span>
+          </div>
+        </div>
       </section>
 
       {/* Main Dashboard */}
