@@ -2686,17 +2686,30 @@ h1, h2, h3, h4, h5, h6 {
 
 .score-description {
   flex: 1;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.6), rgba(248, 250, 252, 0.4));
+  padding: 1rem;
+  border-radius: var(--border-radius-lg);
+  border: 1px solid rgba(37, 99, 235, 0.08);
+  transition: all 0.3s ease;
+}
+
+.score-description:hover {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(248, 250, 252, 0.6));
+  border-color: rgba(37, 99, 235, 0.15);
 }
 
 .score-description h3 {
   margin: 0 0 0.5rem 0;
-  color: var(--dark);
+  color: #2563eb;
+  font-weight: 700;
+  font-size: 1rem;
 }
 
 .score-description p {
   margin: 0;
-  color: var(--secondary);
-  line-height: 1.5;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  font-size: 0.9rem;
 }
 
 /* Alert Styles */
@@ -4121,13 +4134,24 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .tech-badge {
-  background: rgba(59, 130, 246, 0.1);
-  color: var(--primary);
-  padding: 0.25rem 0.75rem;
-  border-radius: var(--border-radius-sm);
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.15), rgba(6, 182, 212, 0.08));
+  color: #2563eb;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
   font-size: 0.8rem;
-  font-weight: 500;
-  border: 1px solid rgba(59, 130, 246, 0.2);
+  font-weight: 700;
+  border: 1.5px solid rgba(37, 99, 235, 0.25);
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
+  text-transform: uppercase;
+  letter-spacing: 0.2px;
+}
+
+.tech-badge:hover {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.25), rgba(6, 182, 212, 0.15));
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+  border-color: rgba(37, 99, 235, 0.4);
+  transform: translateY(-2px);
 }
 
 .social-links {
@@ -4696,26 +4720,40 @@ h1, h2, h3, h4, h5, h6 {
 
 /* ANOVA Table */
 .anova-table {
-  margin-top: 1rem;
+  margin-top: 1.5rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(248, 250, 252, 0.6) 100%);
+  border-radius: var(--border-radius-lg);
+  border: 1px solid rgba(37, 99, 235, 0.1);
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.05);
 }
 
 .anova-row {
   display: grid;
   grid-template-columns: 1fr 80px 80px 80px;
-  gap: 0.5rem;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid rgba(226, 232, 240, 0.3);
-  font-size: 0.75rem;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(37, 99, 235, 0.08);
+  font-size: 0.875rem;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.anova-row:hover {
+  background: rgba(37, 99, 235, 0.03);
 }
 
 .anova-row.header {
-  font-weight: 700;
-  color: #1e293b;
-  background: rgba(248, 250, 252, 0.8);
-  padding: 0.75rem 0.5rem;
-  border-radius: 6px;
-  margin-bottom: 0.5rem;
+  font-weight: 800;
+  color: #2563eb;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(6, 182, 212, 0.05));
+  padding: 1rem;
+  border-radius: 0;
+  margin-bottom: 0;
   border: none;
+  border-bottom: 2px solid rgba(37, 99, 235, 0.2);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
 }
 
 .anova-row span {
