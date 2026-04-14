@@ -78,6 +78,15 @@ function App() {
                 <BarChart3 size={32} />
                 <span>Smart Insights</span>
               </div>
+              <div className="floating-card card-4 sdg-card sdg-9">
+                <img src="/sdg9.png" alt="SDG 9" />
+              </div>
+              <div className="floating-card card-5 sdg-card sdg-11">
+                <img src="/sdg11.png" alt="SDG 11" />
+              </div>
+              <div className="floating-card card-6 sdg-card sdg-13">
+                <img src="/sdg.png" alt="SDG 13" />
+              </div>
             </div>
           </div>
         </div>
