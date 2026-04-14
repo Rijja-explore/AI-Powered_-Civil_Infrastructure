@@ -375,9 +375,9 @@ const ImageAnalysis = () => {
                       </span>
                     </div>
                     {outputImages?.crack_detection ? (
-                      <img src={outputImages.crack_detection} alt="Crack Detection" style={{ width: '100%', height: '300px', objectFit: 'cover', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                      <img src={outputImages.crack_detection} alt="Crack Detection" style={{ width: '100%', height: 'auto', objectFit: 'contain', minHeight: '320px', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
                     ) : (
-                      <div style={{ width: '100%', height: '300px', background: '#f0f0f0', borderRadius: 'var(--border-radius)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999' }}>No image</div>
+                      <div style={{ width: '100%', height: '320px', background: '#f0f0f0', borderRadius: 'var(--border-radius)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999' }}>Processing...</div>
                     )}
                   </div>
 

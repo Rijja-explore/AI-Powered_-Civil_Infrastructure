@@ -38,10 +38,15 @@ function App() {
       {/* Hero Section */}
       <section className="hero-section">
         <div className="hero-overlay"></div>
+        <div className="logo-badge">
+          <svg viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg">
+            <text x="50%" y="50%" textAnchor="middle" dy=".3em" fontSize="32" fontWeight="bold" fill="#2563eb">InfraVision</text>
+            <text x="50%" y="70%" textAnchor="middle" dy=".3em" fontSize="16" fill="#06b6d4">AI</text>
+          </svg>
+        </div>
         <div className="hero-content">
           <div className="hero-text">
             <h1 className="hero-title">
-              <Shield className="hero-icon" size={48} />
               InfraVision AI
             </h1>
             <p className="hero-subtitle">
