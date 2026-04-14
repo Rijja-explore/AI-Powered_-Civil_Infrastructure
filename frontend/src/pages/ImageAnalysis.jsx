@@ -147,7 +147,7 @@ const ImageAnalysis = () => {
       </div>
       <div className="metric-content">
         <div className="metric-title">{title}</div>
-        <div className="metric-value" style={{ fontSize: '0.95rem' }}>{value}</div>
+        <div className="metric-value" style={{ fontSize: '1.25rem', fontWeight: '800', color: '#000000' }}>{value}</div>
         {subtitle && <div className="metric-subtitle">{subtitle}</div>}
       </div>
     </div>
@@ -361,7 +361,7 @@ const ImageAnalysis = () => {
                       📸 Original Image
                     </div>
                     {outputImages?.original ? (
-                      <img src={outputImages.original} alt="Original" style={{ width: '100%', height: '300px', objectFit: 'cover', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                      <img src={outputImages.original} alt="Original" style={{ width: '100%', height: 'auto', objectFit: 'contain', minHeight: '300px', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
                     ) : (
                       <div style={{ width: '100%', height: '300px', background: '#f0f0f0', borderRadius: 'var(--border-radius)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999' }}>No image</div>
                     )}
@@ -389,7 +389,7 @@ const ImageAnalysis = () => {
                       </span>
                     </div>
                     {outputImages?.biological_growth ? (
-                      <img src={outputImages.biological_growth} alt="Biological Growth" style={{ width: '100%', height: '300px', objectFit: 'cover', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                      <img src={outputImages.biological_growth} alt="Biological Growth" style={{ width: '100%', height: 'auto', objectFit: 'contain', minHeight: '300px', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
                     ) : (
                       <div style={{ width: '100%', height: '300px', background: '#f0f0f0', borderRadius: 'var(--border-radius)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999' }}>No image</div>
                     )}
@@ -636,42 +636,6 @@ const ImageAnalysis = () => {
                     subtitle="Efficiency rating"
                     color="success"
                   />
-                </div>
-
-                {/* NEW: Advanced Structural Assessment Section */}
-                <div style={{ marginTop: '2rem', padding: '1.5rem', background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(59, 130, 246, 0.1))', borderRadius: 'var(--border-radius)', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
-                  <h5 style={{ margin: '0 0 1rem 0', color: 'var(--dark)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Shield size={18} />
-                    🔍 Advanced Durability & Weathering Assessment
-                  </h5>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
-                    <div style={{ background: 'white', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(0,0,0,0.1)' }}>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: '600', marginBottom: '0.5rem' }}>Weathering Index</div>
-                      <div style={{ fontSize: '1.5rem', fontWeight: '700', color: results.biological_growth?.growth_percentage > 20 ? '#ea580c' : '#16a34a' }}>
-                        {results.biological_growth?.growth_percentage > 20 ? 'High' : results.biological_growth?.growth_percentage > 10 ? 'Moderate' : 'Low'}
-                      </div>
-                      <div style={{ fontSize: '0.7rem', color: 'var(--secondary)', marginTop: '0.25rem' }}>Based on growth patterns</div>
-                    </div>
-                    <div style={{ background: 'white', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(0,0,0,0.1)' }}>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: '600', marginBottom: '0.5rem' }}>Structural Stress Level</div>
-                      <div style={{ fontSize: '1.5rem', fontWeight: '700', color: results.crack_detection?.count > 5 ? '#dc2626' : results.crack_detection?.count > 2 ? '#ca8a04' : '#16a34a' }}>
-                        {results.crack_detection?.count > 5 ? 'Critical' : results.crack_detection?.count > 2 ? 'Moderate' : 'Stable'}
-                      </div>
-                      <div style={{ fontSize: '0.7rem', color: 'var(--secondary)', marginTop: '0.25rem' }}>{results.crack_detection?.count} cracks detected</div>
-                    </div>
-                    <div style={{ background: 'white', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(0,0,0,0.1)' }}>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: '600', marginBottom: '0.5rem' }}>Durability Forecast</div>
-                      <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#6366f1' }}>
-                        {(() => {
-                          const healthScore = results.data_science_insights?.health_score || 0;
-                          if (healthScore > 75) return '8-10 yrs';
-                          if (healthScore > 50) return '3-7 yrs';
-                          return '< 3 yrs';
-                        })()}
-                      </div>
-                      <div style={{ fontSize: '0.7rem', color: 'var(--secondary)', marginTop: '0.25rem' }}>Maintenance window</div>
-                    </div>
-                  </div>
                 </div>
 
                 {/* Environmental Recommendations */}
