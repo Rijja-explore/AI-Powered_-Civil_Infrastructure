@@ -1,3 +1,6 @@
+# ==================== FRONTEND ASSETS ====================
+frontend/public/sdg*.png
+
 # ==================== NODE MODULES ====================
 node_modules/
 **/node_modules/
