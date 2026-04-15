@@ -1,5 +1,11 @@
 # ==================== FRONTEND ASSETS ====================
 frontend/public/sdg*.png
+frontend/src/assets/*.png
+
+# ==================== IMAGE FILES (served separately or via CDN) ====================
+*.png
+*.jpg
+*.jpeg
 
 # ==================== NODE MODULES ====================
 node_modules/
