@@ -4,14 +4,14 @@
 *.onnx filter=lfs diff=lfs merge=lfs -text
 *.h5 filter=lfs diff=lfs merge=lfs -text
 
-# Large image/media files
-*.png filter=lfs diff=lfs merge=lfs -text
-*.jpg filter=lfs diff=lfs merge=lfs -text
-*.jpeg filter=lfs diff=lfs merge=lfs -text
-*.gif filter=lfs diff=lfs merge=lfs -text
-*.bmp filter=lfs diff=lfs merge=lfs -text
-*.tiff filter=lfs diff=lfs merge=lfs -text
-*.webp filter=lfs diff=lfs merge=lfs -text
+# Image/media files - kept in git (not LFS since models are on HF Models)
+# *.png filter=lfs diff=lfs merge=lfs -text
+# *.jpg filter=lfs diff=lfs merge=lfs -text
+# *.jpeg filter=lfs diff=lfs merge=lfs -text
+# *.gif filter=lfs diff=lfs merge=lfs -text
+# *.bmp filter=lfs diff=lfs merge=lfs -text
+# *.tiff filter=lfs diff=lfs merge=lfs -text
+# *.webp filter=lfs diff=lfs merge=lfs -text
 
 # Event logs and large data files
 events.out.tfevents.* filter=lfs diff=lfs merge=lfs -text
