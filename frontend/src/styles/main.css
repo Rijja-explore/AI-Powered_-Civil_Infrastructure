@@ -564,12 +564,16 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   align-items: center;
   gap: 1rem;
-  color: #000000 !important; /* Force to Black */
+  color: #FFFFFF !important; /* White text */
   text-shadow: 
-    -2px -2px 0 rgba(100, 100, 100, 0.6),
-     2px -2px 0 rgba(100, 100, 100, 0.6),
-    -2px  2px 0 rgba(100, 100, 100, 0.6),
-     2px  2px 0 rgba(100, 100, 100, 0.6);
+    -3px -3px 0 #000000,
+     3px -3px 0 #000000,
+    -3px  3px 0 #000000,
+     3px  3px 0 #000000,
+    -3px  0px 0 #000000,
+     3px  0px 0 #000000,
+     0px -3px 0 #000000,
+     0px  3px 0 #000000;
   filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.5));
   position: relative;
   letter-spacing: -2px;

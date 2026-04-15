@@ -13,9 +13,10 @@ import { AnalysisProvider } from './contexts/AnalysisContext';
 function App() {
   const [activeTab, setActiveTab] = useState('image-analysis');
   const [logos, setLogos] = useState({
+    sdg: null,
     sdg9: null,
     sdg11: null,
-    sdg: null
+    sdg13: null
   });
   const [systemStatus, setSystemStatus] = useState({
     backendConnected: false,
@@ -30,9 +31,10 @@ function App() {
       try {
         const hfModelUrl = 'https://huggingface.co/RijjaExplore/InfraVision-Models/resolve/main';
         setLogos({
+          sdg: `${hfModelUrl}/sdg.png`,
           sdg9: `${hfModelUrl}/sdg9.png`,
           sdg11: `${hfModelUrl}/sdg11.png`,
-          sdg: `${hfModelUrl}/sdg.png`
+          sdg13: `${hfModelUrl}/sdg13.png`
         });
       } catch (error) {
         console.error('Error fetching logos:', error);
@@ -62,20 +64,25 @@ function App() {
         <div className="hero-overlay"></div>
         
         {/* SDG Logos - Corner Layout */}
-        <div style={{ position: 'absolute', top: '20px', right: '20px', display: 'flex', gap: '1.2rem', zIndex: '20' }}>
-          {logos.sdg9 && (
-            <div style={{ width: '80px', height: '80px', background: 'rgba(255,255,255,0.15)', borderRadius: '12px', border: '2px solid rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)', boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}>
-              <img src={logos.sdg9} alt="SDG 9" style={{ width: '68px', height: '68px', objectFit: 'contain' }} onError={(e) => e.target.style.display = 'none'} />
+        <div style={{ position: 'absolute', top: '20px', right: '20px', display: 'flex', gap: '1.5rem', zIndex: '20' }}>
+          {logos.sdg && (
+            <div style={{ width: '110px', height: '110px', background: 'rgba(255,255,255,0.15)', borderRadius: '12px', border: '2px solid rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)', boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}>
+              <img src={logos.sdg} alt="SDG" style={{ width: '95px', height: '95px', objectFit: 'contain' }} onError={(e) => e.target.style.display = 'none'} />
             </div>
           )}
-          {logos.sdg && (
-            <div style={{ width: '80px', height: '80px', background: 'rgba(255,255,255,0.15)', borderRadius: '12px', border: '2px solid rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)', boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}>
-              <img src={logos.sdg} alt="SDG" style={{ width: '68px', height: '68px', objectFit: 'contain' }} onError={(e) => e.target.style.display = 'none'} />
+          {logos.sdg9 && (
+            <div style={{ width: '110px', height: '110px', background: 'rgba(255,255,255,0.15)', borderRadius: '12px', border: '2px solid rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)', boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}>
+              <img src={logos.sdg9} alt="SDG 9" style={{ width: '95px', height: '95px', objectFit: 'contain' }} onError={(e) => e.target.style.display = 'none'} />
             </div>
           )}
           {logos.sdg11 && (
-            <div style={{ width: '80px', height: '80px', background: 'rgba(255,255,255,0.15)', borderRadius: '12px', border: '2px solid rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)', boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}>
-              <img src={logos.sdg11} alt="SDG 11" style={{ width: '68px', height: '68px', objectFit: 'contain' }} onError={(e) => e.target.style.display = 'none'} />
+            <div style={{ width: '110px', height: '110px', background: 'rgba(255,255,255,0.15)', borderRadius: '12px', border: '2px solid rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)', boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}>
+              <img src={logos.sdg11} alt="SDG 11" style={{ width: '95px', height: '95px', objectFit: 'contain' }} onError={(e) => e.target.style.display = 'none'} />
+            </div>
+          )}
+          {logos.sdg13 && (
+            <div style={{ width: '110px', height: '110px', background: 'rgba(255,255,255,0.15)', borderRadius: '12px', border: '2px solid rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)', boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}>
+              <img src={logos.sdg13} alt="SDG 13" style={{ width: '95px', height: '95px', objectFit: 'contain' }} onError={(e) => e.target.style.display = 'none'} />
             </div>
           )}
         </div>
@@ -152,8 +159,9 @@ function App() {
       {/* Footer */}
       <footer className="app-footer">
         <div className="footer-bottom">
-          <p style={{ fontWeight: '500', marginBottom: '10px' }}>AI-Based Structural Health Monitoring & Assessment System</p>
-          <div className="sdg-badges">
+          <p style={{ fontWeight: '500', marginBottom: '15px', color: '#000' }}>&copy; 2026 InfraVision AI - Intelligent Structural Health Monitoring & Advanced Infrastructure Analysis System</p>
+          <p style={{ fontWeight: '500', color: '#000' }}>Rijja H and Rohith Varshighan S</p>
+          <div className="sdg-badges" style={{ marginTop: '15px' }}>
             <div className="sdg-badge" title="SDG 9: Industry, Innovation & Infrastructure">
               <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
                 <rect width="100" height="100" fill="#DD1C3D"/>
@@ -164,12 +172,18 @@ function App() {
             <div className="sdg-badge" title="SDG 11: Sustainable Cities & Communities">
               <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
                 <rect width="100" height="100" fill="#FCC30B"/>
-                <text x="50" y="50" textAnchor="middle" dy=".3em" fontSize="24" fontWeight="bold" fill="#333">11</text>
+                <text x="50" y="50" textAnchor="middle" dy=".3em" fontSize="24" fontWeight="bold" fill="#000">11</text>
               </svg>
               <span>SDG 11</span>
             </div>
+            <div className="sdg-badge" title="SDG 13: Climate Action">
+              <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <rect width="100" height="100" fill="#407D52"/>
+                <text x="50" y="50" textAnchor="middle" dy=".3em" fontSize="24" fontWeight="bold" fill="white">13</text>
+              </svg>
+              <span>SDG 13</span>
+            </div>
           </div>
-          <p>&copy; 2026 Rijja H and Rohith Varshighan S</p>
         </div>
       </footer>
     </div>
