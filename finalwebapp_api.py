@@ -922,43 +922,59 @@ def create_environmental_impact_graphs(carbon_footprint, water_footprint, materi
 def generate_moisture_dampness_heatmap(image, segmented_image):
     """Generate a moisture/dampness heatmap visualization"""
     try:
-        if image is None:
+        if image is None or not isinstance(image, np.ndarray):
             # Return a blank image
-            return np.zeros((image.shape[0], image.shape[1], 3), dtype=np.uint8)
+            return np.zeros((256, 256, 3), dtype=np.uint8)
         
         # Create moisture detection based on color analysis
         # Blue channels typically indicate moisture
-        hsv = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
+        if image.shape[2] == 3 or len(image.shape) == 3:
+            hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV) if cv2 else image
+        else:
+            hsv = image
         
         # Detect darker regions (typically moisture-affected areas)
-        lower_dark = np.array([0, 0, 0])
-        upper_dark = np.array([180, 255, 100])
-        moisture_mask = cv2.inRange(hsv, lower_dark, upper_dark)
-        
-        # Apply Gaussian blur for smooth heatmap
-        moisture_blurred = cv2.GaussianBlur(moisture_mask, (21, 21), 0)
-        
-        # Create heatmap visualization
-        heatmap = cv2.applyColorMap(moisture_blurred, cv2.COLORMAP_JET)
-        
-        # Blend with original image
-        result = cv2.addWeighted(image, 0.5, heatmap, 0.5, 0)
+        if cv2 is not None:
+            lower_dark = np.array([0, 0, 0])
+            upper_dark = np.array([180, 255, 100])
+            moisture_mask = cv2.inRange(hsv, lower_dark, upper_dark)
+            
+            # Apply Gaussian blur for smooth heatmap
+            moisture_blurred = cv2.GaussianBlur(moisture_mask, (21, 21), 0)
+            
+            # Create heatmap visualization
+            heatmap = cv2.applyColorMap(moisture_blurred, cv2.COLORMAP_JET)
+            
+            # Blend with original image
+            result = cv2.addWeighted(image, 0.5, heatmap, 0.5, 0)
+        else:
+            # Fallback without cv2
+            result = image.copy()
         
         return result
     except Exception as e:
         print(f"⚠️ Error generating moisture heatmap: {e}")
-        # Return a fallback heatmap
-        return image if image is not None else np.zeros((224, 224, 3), dtype=np.uint8)
+        # Return a fallback heatmap with proper dimensions
+        if image is not None and isinstance(image, np.ndarray):
+            return image.copy()
+        return np.zeros((256, 256, 3), dtype=np.uint8)
 
 
 def generate_structural_stress_map(image, annotated_image):
     """Generate a structural stress visualization based on detected features"""
     try:
-        if image is None:
-            return np.zeros((image.shape[0], image.shape[1], 3), dtype=np.uint8)
+        if image is None or not isinstance(image, np.ndarray):
+            return np.zeros((256, 256, 3), dtype=np.uint8)
+        
+        if cv2 is None:
+            return image.copy()
         
         # Create stress map from edge detection
-        gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+        if len(image.shape) == 3:
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        else:
+            gray = image
+        
         edges = cv2.Canny(gray, 100, 200)
         
         # Dilate edges to make them more prominent
@@ -977,25 +993,31 @@ def generate_structural_stress_map(image, annotated_image):
         return result
     except Exception as e:
         print(f"⚠️ Error generating structural stress map: {e}")
-        return image if image is not None else np.zeros((224, 224, 3), dtype=np.uint8)
+        return image.copy() if (image is not None and isinstance(image, np.ndarray)) else np.zeros((256, 256, 3), dtype=np.uint8)
 
 
 def generate_thermal_infrared_simulation(image, depth_map):
     """Generate a thermal/infrared simulation visualization"""
     try:
-        if image is None:
-            return np.zeros((image.shape[0], image.shape[1], 3), dtype=np.uint8)
+        if image is None or not isinstance(image, np.ndarray):
+            return np.zeros((256, 256, 3), dtype=np.uint8)
+        
+        if cv2 is None:
+            return image.copy()
         
         # Use depth information to simulate thermal signature
-        gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+        if len(image.shape) == 3:
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        else:
+            gray = image
         
         # If depth_map is not available, use grayscale
-        if depth_map is None:
+        if depth_map is None or not isinstance(depth_map, np.ndarray):
             thermal_data = gray
         else:
             # Blend depth with grayscale for thermal effect
             if len(depth_map.shape) == 3:
-                depth_gray = cv2.cvtColor(depth_map, cv2.COLOR_RGB2GRAY)
+                depth_gray = cv2.cvtColor(depth_map, cv2.COLOR_BGR2GRAY)
             else:
                 depth_gray = depth_map
             thermal_data = cv2.addWeighted(gray, 0.5, depth_gray, 0.5, 0)
@@ -1012,7 +1034,7 @@ def generate_thermal_infrared_simulation(image, depth_map):
         return result
     except Exception as e:
         print(f"⚠️ Error generating thermal simulation: {e}")
-        return image if image is not None else np.zeros((224, 224, 3), dtype=np.uint8)
+        return image.copy() if (image is not None and isinstance(image, np.ndarray)) else np.zeros((256, 256, 3), dtype=np.uint8)
 
 
 # ==================== END HELPER FUNCTIONS ====================
@@ -1790,47 +1812,85 @@ def analyze():
         try:
             def ensure_3channel(img):
                 """Ensure image is 3-channel BGR for encoding"""
-                if img is None:
-                    return None
+                if img is None or not isinstance(img, np.ndarray):
+                    # Return a placeholder image
+                    return np.zeros((256, 256, 3), dtype=np.uint8)
                 if len(img.shape) == 2:  # Grayscale
-                    return cv2.cvtColor(img, cv2.COLOR_GRAY2BGR) if cv2 else img
+                    return cv2.cvtColor(img, cv2.COLOR_GRAY2BGR) if cv2 else cv2.cvtColor(img, cv2.COLOR_GRAY2RGB) if cv2 else np.stack([img]*3, axis=2)
+                if img.shape[2] == 4:  # RGBA
+                    return cv2.cvtColor(img, cv2.COLOR_RGBA2BGR) if cv2 else img[:,:,:3]
                 return img
             
-            # Generate basic images
+            def safe_encode_image(img):
+                """Safely encode image to base64 with fallback"""
+                try:
+                    img_3ch = ensure_3channel(img)
+                    if img_3ch is None or not isinstance(img_3ch, np.ndarray):
+                        # Return grey placeholder
+                        img_3ch = np.ones((256, 256, 3), dtype=np.uint8) * 100
+                    return image_to_base64(img_3ch)
+                except Exception as e:
+                    print(f"   ⚠️ Failed to encode image: {e}. Using placeholder.")
+                    # Return a grey placeholder image
+                    placeholder = np.ones((256, 256, 3), dtype=np.uint8) * 128
+                    try:
+                        return image_to_base64(placeholder)
+                    except:
+                        return ""
+            
+            # Generate basic images with safe encoding
             output_images = {
-                "original": image_to_base64(ensure_3channel(image_np)),
-                "crack_detection": image_to_base64(ensure_3channel(annotated_image)),
-                "biological_growth": image_to_base64(ensure_3channel(growth_image)),
-                "segmentation": image_to_base64(ensure_3channel(segmented_image)),
-                "depth_estimation": image_to_base64(ensure_3channel(depth_heatmap)),
-                "edge_detection": image_to_base64(ensure_3channel(edges)),
+                "original": safe_encode_image(image_np),
+                "crack_detection": safe_encode_image(annotated_image),
+                "biological_growth": safe_encode_image(growth_image),
+                "segmentation": safe_encode_image(segmented_image),
+                "depth_estimation": safe_encode_image(depth_heatmap),
+                "edge_detection": safe_encode_image(edges),
             }
             
-            # Generate additional analysis images with error handling
+            # Generate additional analysis images with safe encoding
             try:
-                output_images["moisture_dampness_heatmap"] = image_to_base64(ensure_3channel(generate_moisture_dampness_heatmap(image_np, segmented_image)))
+                moisture_img = generate_moisture_dampness_heatmap(image_np, segmented_image)
+                output_images["moisture_dampness_heatmap"] = safe_encode_image(moisture_img)
             except Exception as e:
                 print(f"   ⚠️ Skipped moisture heatmap: {e}")
-                output_images["moisture_dampness_heatmap"] = None
+                output_images["moisture_dampness_heatmap"] = safe_encode_image(None)
             
             try:
-                output_images["structural_stress_map"] = image_to_base64(ensure_3channel(generate_structural_stress_map(image_np, annotated_image)))
+                stress_img = generate_structural_stress_map(image_np, annotated_image)
+                output_images["structural_stress_map"] = safe_encode_image(stress_img)
             except Exception as e:
                 print(f"   ⚠️ Skipped structural stress map: {e}")
-                output_images["structural_stress_map"] = None
+                output_images["structural_stress_map"] = safe_encode_image(None)
             
             try:
-                output_images["thermal_infrared_simulation"] = image_to_base64(ensure_3channel(generate_thermal_infrared_simulation(image_np, depth_heatmap)))
+                thermal_img = generate_thermal_infrared_simulation(image_np, depth_heatmap)
+                output_images["thermal_infrared_simulation"] = safe_encode_image(thermal_img)
             except Exception as e:
                 print(f"   ⚠️ Skipped thermal simulation: {e}")
-                output_images["thermal_infrared_simulation"] = None
+                output_images["thermal_infrared_simulation"] = safe_encode_image(None)
             
         except Exception as e:
             print(f"❌ Error generating output images: {e}")
             import traceback
             traceback.print_exc()
-            # Provide minimal output images
-            output_images = {"original": image_to_base64(image_np)}
+            # Provide minimal output images with safe fallback
+            placeholder = np.ones((256, 256, 3), dtype=np.uint8) * 100
+            try:
+                placeholder_b64 = image_to_base64(placeholder)
+            except:
+                placeholder_b64 = ""
+            output_images = {
+                "original": placeholder_b64,
+                "crack_detection": placeholder_b64,
+                "biological_growth": placeholder_b64,
+                "segmentation": placeholder_b64,
+                "depth_estimation": placeholder_b64,
+                "edge_detection": placeholder_b64,
+                "moisture_dampness_heatmap": placeholder_b64,
+                "structural_stress_map": placeholder_b64,
+                "thermal_infrared_simulation": placeholder_b64,
+            }
 
         # Create material properties chart now that carbon & sustainability known
         try:
