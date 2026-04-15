@@ -566,14 +566,10 @@ h1, h2, h3, h4, h5, h6 {
   gap: 1rem;
   color: #000000 !important; /* Force to Black */
   text-shadow: 
-    -4px -4px 0 #000, /* Thicker Border */
-     4px -4px 0 #000,
-    -4px  4px 0 #000,
-     4px  4px 0 #000,
-    -4px  0px 0 #000,
-     4px  0px 0 #000,
-     0px -4px 0 #000,
-     0px  4px 0 #000;
+    -2px -2px 0 rgba(100, 100, 100, 0.6),
+     2px -2px 0 rgba(100, 100, 100, 0.6),
+    -2px  2px 0 rgba(100, 100, 100, 0.6),
+     2px  2px 0 rgba(100, 100, 100, 0.6);
   filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.5));
   position: relative;
   letter-spacing: -2px;

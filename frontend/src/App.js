@@ -12,12 +12,34 @@ import { AnalysisProvider } from './contexts/AnalysisContext';
 
 function App() {
   const [activeTab, setActiveTab] = useState('image-analysis');
+  const [logos, setLogos] = useState({
+    sdg9: null,
+    sdg11: null,
+    sdg: null
+  });
   const [systemStatus, setSystemStatus] = useState({
     backendConnected: false,
     lastAnalysis: null,
     activeStreams: 0,
     alertsCount: 0
   });
+
+  // Fetch logos from Hugging Face Models
+  useEffect(() => {
+    const fetchLogos = async () => {
+      try {
+        const hfModelUrl = 'https://huggingface.co/RijjaExplore/InfraVision-Models/resolve/main';
+        setLogos({
+          sdg9: `${hfModelUrl}/sdg9.png`,
+          sdg11: `${hfModelUrl}/sdg11.png`,
+          sdg: `${hfModelUrl}/sdg.png`
+        });
+      } catch (error) {
+        console.error('Error fetching logos:', error);
+      }
+    };
+    fetchLogos();
+  }, []);
 
   // Status updates removed - footer only shows copyright
 
@@ -38,6 +60,25 @@ function App() {
       {/* Hero Section */}
       <section className="hero-section">
         <div className="hero-overlay"></div>
+        
+        {/* SDG Logos - Corner Layout */}
+        <div style={{ position: 'absolute', top: '20px', right: '20px', display: 'flex', gap: '1.2rem', zIndex: '20' }}>
+          {logos.sdg9 && (
+            <div style={{ width: '80px', height: '80px', background: 'rgba(255,255,255,0.15)', borderRadius: '12px', border: '2px solid rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)', boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}>
+              <img src={logos.sdg9} alt="SDG 9" style={{ width: '68px', height: '68px', objectFit: 'contain' }} onError={(e) => e.target.style.display = 'none'} />
+            </div>
+          )}
+          {logos.sdg && (
+            <div style={{ width: '80px', height: '80px', background: 'rgba(255,255,255,0.15)', borderRadius: '12px', border: '2px solid rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)', boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}>
+              <img src={logos.sdg} alt="SDG" style={{ width: '68px', height: '68px', objectFit: 'contain' }} onError={(e) => e.target.style.display = 'none'} />
+            </div>
+          )}
+          {logos.sdg11 && (
+            <div style={{ width: '80px', height: '80px', background: 'rgba(255,255,255,0.15)', borderRadius: '12px', border: '2px solid rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)', boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}>
+              <img src={logos.sdg11} alt="SDG 11" style={{ width: '68px', height: '68px', objectFit: 'contain' }} onError={(e) => e.target.style.display = 'none'} />
+            </div>
+          )}
+        </div>
 
         <div className="hero-content">
           <div className="hero-text">
