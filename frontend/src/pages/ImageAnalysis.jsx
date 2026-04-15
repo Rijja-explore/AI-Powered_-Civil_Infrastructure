@@ -147,7 +147,7 @@ const ImageAnalysis = () => {
       </div>
       <div className="metric-content">
         <div className="metric-title">{title}</div>
-        <div className="metric-value" style={{ fontSize: '1.25rem', fontWeight: '800', color: '#000000' }}>{value}</div>
+        <div className="metric-value" style={{ fontSize: '0.95rem', fontWeight: '700', color: '#000000' }}>{value}</div>
         {subtitle && <div className="metric-subtitle">{subtitle}</div>}
       </div>
     </div>
@@ -361,9 +361,9 @@ const ImageAnalysis = () => {
                       📸 Original Image
                     </div>
                     {outputImages?.original ? (
-                      <img src={outputImages.original} alt="Original" style={{ width: '100%', height: 'auto', objectFit: 'contain', minHeight: '300px', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                      <img src={outputImages.original} alt="Original" style={{ width: '100%', height: 'auto', objectFit: 'contain', minHeight: '300px', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }} />
                     ) : (
-                      <div style={{ width: '100%', height: '300px', background: '#f0f0f0', borderRadius: 'var(--border-radius)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999' }}>No image</div>
+                      <div style={{ width: '100%', height: '300px', background: 'rgba(209, 213, 219, 0.5)', borderRadius: 'var(--border-radius)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a0a0a0', fontSize: '0.9rem' }}>No image loaded</div>
                     )}
                   </div>
 
@@ -375,9 +375,9 @@ const ImageAnalysis = () => {
                       </span>
                     </div>
                     {outputImages?.crack_detection ? (
-                      <img src={outputImages.crack_detection} alt="Crack Detection" style={{ width: '100%', height: 'auto', objectFit: 'contain', minHeight: '320px', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                      <img src={outputImages.crack_detection} alt="Crack Detection" style={{ width: '100%', height: 'auto', objectFit: 'contain', minHeight: '320px', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }} />
                     ) : (
-                      <div style={{ width: '100%', height: '320px', background: '#f0f0f0', borderRadius: 'var(--border-radius)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999' }}>Processing...</div>
+                      <div style={{ width: '100%', height: '320px', background: 'rgba(209, 213, 219, 0.5)', borderRadius: 'var(--border-radius)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a0a0a0', fontSize: '0.9rem' }}>Processing...</div>
                     )}
                   </div>
 
@@ -389,9 +389,9 @@ const ImageAnalysis = () => {
                       </span>
                     </div>
                     {outputImages?.biological_growth ? (
-                      <img src={outputImages.biological_growth} alt="Biological Growth" style={{ width: '100%', height: 'auto', objectFit: 'contain', minHeight: '300px', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                      <img src={outputImages.biological_growth} alt="Biological Growth" style={{ width: '100%', height: 'auto', objectFit: 'contain', minHeight: '300px', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }} />
                     ) : (
-                      <div style={{ width: '100%', height: '300px', background: '#f0f0f0', borderRadius: 'var(--border-radius)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999' }}>No image</div>
+                      <div style={{ width: '100%', height: '300px', background: 'rgba(209, 213, 219, 0.5)', borderRadius: 'var(--border-radius)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a0a0a0', fontSize: '0.9rem' }}>No image loaded</div>
                     )}
                   </div>
 
@@ -401,9 +401,9 @@ const ImageAnalysis = () => {
                       🎯 AI Segmentation
                     </div>
                     {outputImages?.segmentation ? (
-                      <img src={outputImages.segmentation} alt="Segmentation" style={{ width: '100%', height: '300px', objectFit: 'cover', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                      <img src={outputImages.segmentation} alt="Segmentation" style={{ width: '100%', height: '300px', objectFit: 'cover', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }} />
                     ) : (
-                      <div style={{ width: '100%', height: '300px', background: '#f0f0f0', borderRadius: 'var(--border-radius)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999' }}>Processing...</div>
+                      <div style={{ width: '100%', height: '300px', background: 'rgba(209, 213, 219, 0.5)', borderRadius: 'var(--border-radius)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a0a0a0', fontSize: '0.9rem' }}>Processing...</div>
                     )}
                   </div>
 
@@ -412,9 +412,9 @@ const ImageAnalysis = () => {
                       📊 Depth Analysis
                     </div>
                     {outputImages?.depth_estimation ? (
-                      <img src={outputImages.depth_estimation} alt="Depth Estimation" style={{ width: '100%', height: '300px', objectFit: 'cover', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                      <img src={outputImages.depth_estimation} alt="Depth Estimation" style={{ width: '100%', height: '300px', objectFit: 'cover', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }} />
                     ) : (
-                      <div style={{ width: '100%', height: '300px', background: '#f0f0f0', borderRadius: 'var(--border-radius)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999' }}>Processing...</div>
+                      <div style={{ width: '100%', height: '300px', background: 'rgba(209, 213, 219, 0.5)', borderRadius: 'var(--border-radius)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a0a0a0', fontSize: '0.9rem' }}>Processing...</div>
                     )}
                   </div>
 
@@ -423,9 +423,9 @@ const ImageAnalysis = () => {
                       ⚡ Edge Detection
                     </div>
                     {outputImages?.edge_detection ? (
-                      <img src={outputImages.edge_detection} alt="Edge Detection" style={{ width: '100%', height: '300px', objectFit: 'cover', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                      <img src={outputImages.edge_detection} alt="Edge Detection" style={{ width: '100%', height: '300px', objectFit: 'cover', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }} />
                     ) : (
-                      <div style={{ width: '100%', height: '300px', background: '#f0f0f0', borderRadius: 'var(--border-radius)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999' }}>Processing...</div>
+                      <div style={{ width: '100%', height: '300px', background: 'rgba(209, 213, 219, 0.5)', borderRadius: 'var(--border-radius)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a0a0a0', fontSize: '0.9rem' }}>Processing...</div>
                     )}
                   </div>
 
@@ -435,9 +435,9 @@ const ImageAnalysis = () => {
                       💧 Moisture/Dampness Heatmap
                     </div>
                     {outputImages?.moisture_dampness_heatmap ? (
-                      <img src={outputImages.moisture_dampness_heatmap} alt="Moisture Heatmap" style={{ width: '100%', height: '300px', objectFit: 'cover', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                      <img src={outputImages.moisture_dampness_heatmap} alt="Moisture Heatmap" style={{ width: '100%', height: '300px', objectFit: 'cover', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }} />
                     ) : (
-                      <div style={{ width: '100%', height: '300px', background: '#f0f0f0', borderRadius: 'var(--border-radius)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999' }}>Processing...</div>
+                      <div style={{ width: '100%', height: '300px', background: 'rgba(209, 213, 219, 0.5)', borderRadius: 'var(--border-radius)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a0a0a0', fontSize: '0.9rem' }}>Processing...</div>
                     )}
                   </div>
 
@@ -446,9 +446,9 @@ const ImageAnalysis = () => {
                       🔴 Structural Stress Map
                     </div>
                     {outputImages?.structural_stress_map ? (
-                      <img src={outputImages.structural_stress_map} alt="Stress Map" style={{ width: '100%', height: '300px', objectFit: 'cover', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                      <img src={outputImages.structural_stress_map} alt="Stress Map" style={{ width: '100%', height: '300px', objectFit: 'cover', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }} />
                     ) : (
-                      <div style={{ width: '100%', height: '300px', background: '#f0f0f0', borderRadius: 'var(--border-radius)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999' }}>Processing...</div>
+                      <div style={{ width: '100%', height: '300px', background: 'rgba(209, 213, 219, 0.5)', borderRadius: 'var(--border-radius)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a0a0a0', fontSize: '0.9rem' }}>Processing...</div>
                     )}
                   </div>
 
@@ -457,9 +457,9 @@ const ImageAnalysis = () => {
                       🔥 Thermal/Infrared Simulation
                     </div>
                     {outputImages?.thermal_infrared_simulation ? (
-                      <img src={outputImages.thermal_infrared_simulation} alt="Thermal Map" style={{ width: '100%', height: '300px', objectFit: 'cover', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                      <img src={outputImages.thermal_infrared_simulation} alt="Thermal Map" style={{ width: '100%', height: '300px', objectFit: 'cover', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }} />
                     ) : (
-                      <div style={{ width: '100%', height: '300px', background: '#f0f0f0', borderRadius: 'var(--border-radius)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999' }}>Processing...</div>
+                      <div style={{ width: '100%', height: '300px', background: 'rgba(209, 213, 219, 0.5)', borderRadius: 'var(--border-radius)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a0a0a0', fontSize: '0.9rem' }}>Processing...</div>
                     )}
                   </div>
                 </div>

@@ -20,10 +20,17 @@ export const extractKPIMetrics = (analysisResults) => {
   // Critical Issues Count - from crack detection
   const criticalIssues = crackData.count || 0;
 
-  // AI Confidence - from Unit 3: Inferential Statistics
-  const aiConfidence = academicDS.unit3_inferential_statistics?.confidence_intervals 
-    ? Object.values(academicDS.unit3_inferential_statistics.confidence_intervals)[0]?.ci_95?.upper_bound || 92
-    : (materialData.probabilities ? Math.max(...Object.values(materialData.probabilities)) * 100 : 92);
+  // AI Confidence - from Unit 3: Inferential Statistics (0-100 scale)
+  let aiConfidence = 85; // Default confidence
+  if (academicDS.unit3_inferential_statistics?.confidence_intervals) {
+    const intervals = Object.values(academicDS.unit3_inferential_statistics.confidence_intervals);
+    if (intervals.length > 0 && intervals[0]?.ci_95?.upper_bound) {
+      aiConfidence = Math.min(100, intervals[0].ci_95.upper_bound);
+    }
+  } else if (materialData.probabilities) {
+    const maxProb = Math.max(...Object.values(materialData.probabilities));
+    aiConfidence = Math.round(maxProb * 100);
+  }
 
   // Sustainability Score - from environmental assessment
   const sustainability = envData.sustainability_score || 7.5;
@@ -90,26 +97,40 @@ export const extractRiskAssessmentData = (analysisResults) => {
   const envData = analysisResults.environmental_impact_assessment || {};
 
   // Risk categories based on ANOVA analysis of severity groups
+  // Calculate normalized scores (0-100 scale)
+  
+  // Structural Integrity: Higher critical crack ratio = lower score
+  const totalCracks = Object.values(crackData.statistics?.severity_distribution || {}).reduce((a, b) => a + b, 1) || 1;
+  const criticalRatio = (crackData.statistics?.severity_distribution?.Critical || 0) / totalCracks;
+  const structuralScore = Math.max(30, 100 - (criticalRatio * 100));
+  
+  // Material Condition: Based on material confidence, not quantity
+  const materialScore = (crackData.material_analysis?.material_confidence || 0.75) * 100;
+  
+  // Environmental Impact: Ensure sustainability score is 0-100
+  const envScore = Math.min(100, Math.max(0, envData.sustainability_score || 75));
+  
+  // Maintenance Requirements: Fewer cracks = better score
+  const maxCracksThreshold = 20;
+  const crackRatio = Math.min(1, (crackData.count || 0) / maxCracksThreshold);
+  const maintenanceScore = Math.max(30, 100 - (crackRatio * 70));
+  
   return [
     { 
       category: 'Structural\nIntegrity', 
-      score: crackData.statistics?.severity_distribution?.Critical 
-        ? 100 - (crackData.statistics.severity_distribution.Critical * 10) 
-        : 88 
+      score: Math.round(structuralScore * 10) / 10
     },
     { 
       category: 'Material\nCondition', 
-      score: envData.material_quantity_kg 
-        ? Math.min(95, 100 - (envData.material_quantity_kg / 10)) 
-        : 82 
+      score: Math.round(materialScore * 10) / 10
     },
     { 
       category: 'Environmental\nImpact', 
-      score: envData.sustainability_score * 10 || 75 
+      score: Math.round(envScore * 10) / 10
     },
     { 
       category: 'Maintenance\nRequirements', 
-      score: crackData.count ? Math.max(60, 95 - (crackData.count * 3)) : 90 
+      score: Math.round(maintenanceScore * 10) / 10
     },
     { 
       category: 'System\nPerformance', 
