@@ -44,14 +44,9 @@ RUN mkdir -p /app/runs/detect/train/weights /app/runs/detect/train3/weights && \
     mkdir -p /app/frontend/src /app/frontend/public && \
     mkdir -p /app/__pycache__
 
-# Copy trained material classifier models if available
-COPY materialclassification_model/*.h5 /app/materialclassification_model/ 2>/dev/null || true
-COPY materialclassification_model/*.tflite /app/materialclassification_model/ 2>/dev/null || true
-
 # Note: Model files in Git LFS will be downloaded during git clone with git-lfs installed
-# If git-lfs doesn't download them during clone, the Python app has graceful fallback to defaults
-# We don't copy directories here because if LFS pointer files exist instead of actual models,
-# that would cause issues. Better to let app handle missing models with fallback logic.
+# The hf_model_loader.py will download trained models at runtime from HF Hub
+# This avoids Docker build failures when optional directories don't exist in build context
 
 # Expose port
 EXPOSE 7860
