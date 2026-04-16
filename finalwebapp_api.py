@@ -160,6 +160,14 @@ app = Flask(__name__)
 CORS(app)
 app.json.sort_keys = False
 
+# ==================== DOWNLOAD MODELS FROM HF HUB ====================
+print("\n📦 Checking for trained models from Hugging Face Hub...")
+try:
+    from hf_model_loader import download_models_from_hf
+    download_models_from_hf()
+except Exception as e:
+    print(f"⚠️ Model download failed: {e}. Continuing with fallback models...")
+
 # Import functions from finalwebapp (suppress streamlit warnings when importing as module)
 import warnings
 with warnings.catch_warnings():
