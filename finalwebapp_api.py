@@ -3111,7 +3111,12 @@ def generate_3d_glb():
         
 if __name__ == '__main__':
     print("🚀 Starting InfraVision AI API Server...")
-    print("📍 Server will be available at: http://localhost:5002")
+    
+    # Detect environment and set port accordingly
+    import os
+    port = int(os.environ.get('PORT', 7860))  # HF Spaces uses 7860, local dev can override
+    
+    print(f"📍 Server will be available at: http://localhost:{port}")
     print("🔧 API Endpoints:")
     print("   - GET  /api/health - Health check")
     print("   - POST /api/analyze - Analyze uploaded image")
@@ -3125,4 +3130,4 @@ if __name__ == '__main__':
     print("   - GET  /api/stream_metrics - Get streaming metrics")
     print("✨ Ready for AI-powered infrastructure monitoring!")
     
-    app.run(host='0.0.0.0', port=5002, debug=False, threaded=True, use_reloader=False)
+    app.run(host='0.0.0.0', port=port, debug=False, threaded=True, use_reloader=False)
