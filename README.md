@@ -1,3 +1,13 @@
+---
+title: InfraVision AI API
+emoji: 🏗️
+colorFrom: blue
+colorTo: cyan
+sdk: docker
+app_file: finalwebapp_api.py
+pinned: false
+---
+
 # InfraVision AI 🏗️
 
 **AI-Powered Infrastructure Monitoring & Analysis System**
