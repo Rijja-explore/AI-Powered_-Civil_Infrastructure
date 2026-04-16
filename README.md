@@ -2,7 +2,7 @@
 title: InfraVision AI API
 emoji: 🏗️
 colorFrom: blue
-colorTo: cyan
+colorTo: purple
 sdk: docker
 app_file: finalwebapp_api.py
 pinned: false
